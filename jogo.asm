@@ -9,37 +9,50 @@
     csrrw zero, utvec, tp
     csrrsi zero, ustatus, 1
     li tp, 0x100
-    csrrw zero, 66, tp
+    csrrw zero, uie, tp
     li t1, 0xff200000
     li t0, 2
     sw t0, (t1)
 
-    # render map
+    # render map both frames
     la a0, map
-    jal render
+    li a1, 0
+    call render
+    li a1, 1
+    call render
 
 	
     li s0, 100
     li s1, 100
+    li s10, 0
     main_loop:
+    
+		xori s10, s10, 1
 
         # render player
         la a0, player
-        jal render
-		
-        # sleep
-        li a7, 32
-        li a0, 5000
-        # ecall
-		
+        mv a1, s10
+        call render
+        
+        li t0, 0xff200604
+		sw s10, 0(t0)
+
+
         # erase player
         la a0, player
-        jal erase_sprite
-		
+        mv a1, s10
+        xori a1, a1, 1
+        call erase_sprite
+        
+        # sleep
+        li a7, 32
+        li a0, 1000
+        # ecall
+
         # move player
         la a0, player
         li a1, 4
-        jal move_sprite
+        call move_sprite
 
         j main_loop
 
@@ -57,21 +70,27 @@
 # registradores usados:
 # t0 - t6
 render:
+	# t0 = endereço bitmap
+	# t6 = endereço imagem
+	li t0, 0xff0
+	add t0, t0, a1
+	slli t0, t0, 20
+	mv t6, a0
+
     # checa tipo de sprite para renderizar
-    lw t0, (a0)
-    li t1, 4
-    beq t0, t1, bg
-    li t1, 12
-    beq t0, t1, static
-    li t1, 24
-    beq t0, t1, moving
+    lw t1, (a0)
+    li t2, 4
+    beq t1, t2, bg
+    li t2, 12
+    beq t1, t2, static
+    li t2, 20
+    beq t1, t2, moving
 
     # render background
     bg: 
-        mv t6, a0
         addi t6, t6, 4
-        li t0, 0xff000000
-        li t1, 0xff012c00
+        li t1, 0x12c00
+        add t1, t1, t0
 
         l4:
             beq t0, t1, e4
@@ -83,6 +102,7 @@ render:
             
         e4:
         ret
+        
     # render static image (fix)
     static:
         # t0 = primeiro pixel
@@ -124,47 +144,45 @@ render:
 	
     moving:
         # pega largura e altura e calcula tamanho
-        lw t0, 4(a0)
-        lw t1, 8(a0)
-        mul t2, t0, t1
+        lhu t1, 4(a0)
+        lhu t2, 6(a0)
+        mul t3, t1, t2
         
         # seleciona imagem certa
-        lw t3, 12(a0)
-        mv t6, a0
-        addi t6, t6, 24
-        mul t2, t2, t3
-        add t6, t6, t2
+        lw t4, 8(a0)
+        addi t6, t6, 20
+        mul t3, t3, t4
+        add t6, t6, t3
         
         # pega x e y
-        lw t2, 16(a0) # x
-        lw t3, 20(a0) # y
+        lhu t3, 12(a0) # x
+        lhu t4, 14(a0) # y
         
         # t4 = primeiro pixel
-        li t4, 0xff000000
         li t5, 320
-        mul t5, t5, t3
-        add t5, t5, t2
-        add t4, t4, t5
+        mul t5, t5, t4
+        add t5, t5, t3
+        add t0, t0, t5
 
         # loop linha y
-        li t2, 0
+        li t3, 0
         l2:
-            bge t2, t1, e2
+            bge t3, t2, e2
         
             # loop coluna x
-            li t3, 0
+            li t4, 0
             l3:
-                bge t3, t0, e3
+                bge t4, t1, e3
                 lw t5, (t6)
-                sw t5, (t4)
+                sw t5, (t0)
                 addi t6, t6, 4
+                addi t0, t0, 4
                 addi t4, t4, 4
-                addi t3, t3, 4
                 j l3
             e3:
-            addi t4, t4, 320
-            sub t4, t4, t0
-            addi t2, t2, 1
+            addi t0, t0, 320
+            sub t0, t0, t1
+            addi t3, t3, 1
             j l2
         e2:
 
@@ -174,17 +192,19 @@ render:
 # erase sprite
 # args:
 # a0 -> sprite image address
-# a3 -> frame
+# a1 -> frame
 # registradores usados:
 # t0 - t6
 erase_sprite:
     # get x e y
-    lw t0, 16(a0) # x
-    lw t1, 20(a0) # y
+    lhu t0, 16(a0) # x
+    lhu t1, 18(a0) # y
 
     # t0 = primeiro pixel bg
     # t1 = primeiro pixel bitmap
-    li t4, 0xff000000
+    li t4, 0xff0
+    add t4, t4, a1
+    slli t4, t4, 20
     la t2, map
     addi t2, t2, 4
     li t3, 320
@@ -194,8 +214,8 @@ erase_sprite:
     add t1, t4, t3
 
     # pega imagem e tamanho
-    lw t2, 4(a0) # colunas x
-    lw t3, 8(a0) # linhas y
+    lhu t2, 4(a0) # colunas x
+    lhu t3, 6(a0) # linhas y
 
     # loop linha y
     li t4, 0
@@ -225,8 +245,12 @@ erase_sprite:
 # a0 -> sprite address
 # a1 -> pixels to move, velocity
 move_sprite:
+	# salva ultima posicao
+	lw t0, 12(a0)
+	sw t0, 16(a0)
+
     # checa direcao
-    lw t0, 12(a0)
+    lw t0, 8(a0)
     li t1, 0
     beq t0, t1, w
     li t1, 1
@@ -237,27 +261,27 @@ move_sprite:
     beq t0, t1, d
 
     w:
-    lw t0, 20(a0)
+    lhu t0, 14(a0)
     sub t0, t0, a1
-    sw t0, 20(a0)
+    sh t0, 14(a0)
     ret
 
     a:
-    lw t0, 16(a0)
+    lhu t0, 12(a0)
     sub t0, t0, a1
-    sw t0, 16(a0)
+    sh t0, 12(a0)
     ret
 
     s:
-    lw t0, 20(a0)
+    lhu t0, 14(a0)
     add t0, t0, a1
-    sw t0, 20(a0)
+    sh t0, 14(a0)
     ret
 
     d:
-    lw t0, 16(a0)
+    lhu t0, 12(a0)
     add t0, t0, a1
-    sw t0, 16(a0)
+    sh t0, 12(a0)
     ret
 
 
@@ -290,22 +314,22 @@ change_dir:
     # muda direcao jogador
     w_:
     li s3, 0
-    sw s3, 12(s2)
+    sw s3, 8(s2)
     j ep1
 
     a_:
     li s3, 1
-    sw s3, 12(s2)
+    sw s3, 8(s2)
     j ep1
 
     s_:
     li s3, 2
-    sw s3, 12(s2)
+    sw s3, 8(s2)
     j ep1
 
     d_:
     li s3, 3
-    sw s3, 12(s2)
+    sw s3, 8(s2)
 
 
 
