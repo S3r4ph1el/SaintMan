@@ -4,16 +4,6 @@
 
 .text
 
-    # config keyboard interrupt
-    la tp, change_dir
-    csrrw zero, utvec, tp
-    csrrsi zero, ustatus, 1
-    li tp, 0x100
-    csrrw zero, uie, tp
-    li t1, 0xff200000
-    li t0, 2
-    sw t0, (t1)
-
     # render map both frames
     la a0, map
     li a1, 0
@@ -24,35 +14,38 @@
 	
     li s0, 100
     li s1, 100
-    li s10, 0
+    li s2, 0
     main_loop:
     
-		xori s10, s10, 1
+		xori s2, s2, 1
 
         # render player
         la a0, player
-        mv a1, s10
+        mv a1, s2
         call render
         
         li t0, 0xff200604
-		sw s10, 0(t0)
+		sw s2, 0(t0)
 
 
         # erase player
         la a0, player
-        mv a1, s10
+        mv a1, s2
         xori a1, a1, 1
         call erase_sprite
         
         # sleep
         li a7, 32
-        li a0, 1000
-        # ecall
+        li a0, 100
+        ecall
 
         # move player
         la a0, player
         li a1, 4
         call move_sprite
+        
+        # check if key pressed and handle it
+        call change_dir
 
         j main_loop
 
@@ -70,8 +63,8 @@
 # registradores usados:
 # t0 - t6
 render:
-	# t0 = endereço bitmap
-	# t6 = endereço imagem
+	# t0 = endereco bitmap
+	# t6 = endereco imagem
 	li t0, 0xff0
 	add t0, t0, a1
 	slli t0, t0, 20
@@ -287,52 +280,59 @@ move_sprite:
 
 # handle key press
 # change direction player
+# registradores usados:
+# t0 - t3
 change_dir:
-    csrrci zero, ustatus, 1
+	
+	# checa se tecla pressionada
+	li t0, 0xff200000
+	lw t1, (t0)
+	andi t1, t1, 1
+	beqz t1, ep1 # se nao tiver retorna
+	
+	# le tecla pressionada
+	lw t1, 4(t0)
 
-    la s2, player
-    li s3, 0xff200000
-    # le  e checa tecla pressionada
-    lw s4, 4(s3)
-    li s5, 'w'
-    beq s4, s5, w_
-    li s5, 'k'
-    beq s4, s5, w_
-    li s5, 'a'
-    beq s4, s5, a_
-    li s5, 'h'
-    beq s4, s5, a_
-    li s5, 's'
-    beq s4, s5, s_
-    li s5, 'j'
-    beq s4, s5, s_
-    li s5, 'd'
-    beq s4, s5, d_
-    li s5, 'l'
-    beq s4, s5, d_
+    # muda direcao
+    la t0, player
+    li t2, 'w'
+    beq t1, t2, w_
+    li t2, 'k'
+    beq t1, t2, w_
+    li t2, 'a'
+    beq t1, t2, a_
+    li t2, 'h'
+    beq t1, t2, a_
+    li t2, 's'
+    beq t1, t2, s_
+    li t2, 'j'
+    beq t1, t2, s_
+    li t2, 'd'
+    beq t1, t2, d_
+    li t2, 'l'
+    beq t1, t2, d_
+    j ep1
     
     # muda direcao jogador
     w_:
-    li s3, 0
-    sw s3, 8(s2)
+    li t1, 0
+    sw t1, 8(t0)
     j ep1
 
     a_:
-    li s3, 1
-    sw s3, 8(s2)
+    li t1, 1
+    sw t1, 8(t0)
     j ep1
 
     s_:
-    li s3, 2
-    sw s3, 8(s2)
+    li t1, 2
+    sw t1, 8(t0)
     j ep1
 
     d_:
-    li s3, 3
-    sw s3, 8(s2)
-
-
+    li t1, 3
+    sw t1, 8(t0)
 
     ep1:
-    csrrsi zero, ustatus, 0x10
-    uret
+	ret
+	
