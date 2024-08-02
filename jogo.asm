@@ -2,7 +2,9 @@
 .include "levels/placeholder_map.data"
 .include "sprites/Zenon.data"
 
-.text
+.eqv MMIO 0xff200000
+.eqv FRAME_SELECTOR 0xff200604
+.text 
 
     # render map both frames
     la a0, map
@@ -10,38 +12,34 @@
     call render
     li a1, 1
     call render
-
 	
-    li s0, 100
-    li s1, 100
-    li s2, 0
     main_loop:
     
-		xori s2, s2, 1
+		xori s0, s0, 1
 
         # render player
         la a0, player
-        mv a1, s2
+        mv a1, s0
         call render
         
-        li t0, 0xff200604
-		sw s2, 0(t0)
+        li t0, FRAME_SELECTOR
+		sw s0, 0(t0)
 
 
         # erase player
         la a0, player
-        mv a1, s2
+        mv a1, s0
         xori a1, a1, 1
         call erase_sprite
         
         # sleep
         li a7, 32
-        li a0, 100
+        li a0, 40
         ecall
 
         # move player
         la a0, player
-        li a1, 4
+        li a1, 1 # 1 rars da erro, fpgrars funciona
         call move_sprite
         
         # check if key pressed and handle it
@@ -237,44 +235,135 @@ erase_sprite:
 # move sprite
 # a0 -> sprite address
 # a1 -> pixels to move, velocity
+# registradores usados:
+# t0 - t6
 move_sprite:
 	# salva ultima posicao
 	lw t0, 12(a0)
 	sw t0, 16(a0)
+	
+	# inicializa registradores
+	lhu t0, 12(a0) # x
+	lhu t1, 14(a0) # y
+	la t2, map
+	addi t2, t2, 4 # word information beggining
+	li t3, 320
+	mul t3, t3, t1
+	add t3, t3, t0
+	add t2, t2, t3
 
-    # checa direcao
-    lw t0, 8(a0)
-    li t1, 0
-    beq t0, t1, w
-    li t1, 1
-    beq t0, t1, a
-    li t1, 2
-    beq t0, t1, s
-    li t1, 3
-    beq t0, t1, d
+	# checa direcao
+    lw t3, 8(a0)
+    li t4, 0
+    beq t3, t4, w
+    li t4, 1
+    beq t3, t4, a
+    li t4, 2
+    beq t3, t4, s
+    li t4, 3
+    beq t3, t4, d
 
-    w:
-    lhu t0, 14(a0)
-    sub t0, t0, a1
-    sh t0, 14(a0)
-    ret
+    w:    
+    sub t1, t1, a1
+   
+    # checa se pode ir para cima
+    
+    # checa se fora do mapa
+    bltz t1, ep2
+    
+    # checa se eh parede
+    li t3, 320
+    mul t3, t3, a1   
+    sub t2, t2, t3
+    lbu t3, 2(t2) # 2 colunas pixels transparentes
+    li t4, 88
+    beq t3, t4, ep2
+    lbu t3, 13(t2) # 16 largura personagem # 2 colunas pixels transparentes
+    beq t3, t4, ep2
+   
+    # change player position
+    sh t1, 14(a0)
+    j ep2
 
     a:
-    lhu t0, 12(a0)
     sub t0, t0, a1
+   
+    # checa se pode ir para esquerda
+    
+    # checa se fora do mapa
+    li t6 46
+    ble t0, t6, ep2
+    
+    # checa se eh parede
+    sub t2, t2, a1
+    addi t2, t2, 1 # 1 coluna pixels transparentes
+    lbu t3, (t2)
+    li t4, 88
+    beq t3, t4, ep2
+    li t5, 320
+    li t6, 15
+    mul t5, t5, t6
+    add t2, t2, t5
+    lbu t3, (t2)
+    beq t3, t4, ep2
+   
+    # change player position
     sh t0, 12(a0)
-    ret
+    j ep2
 
     s:
-    lhu t0, 14(a0)
-    add t0, t0, a1
-    sh t0, 14(a0)
-    ret
+    add t1, t1, a1
+   
+    # checa se pode ir para baixo
+    
+    # checa se eh fora do mapa
+    li t5 224 # 240 - 16
+    bge t1, t5, ep2
+    
+    # checa se eh parede
+    li t3, 320
+    mul t3, t3, a1
+    add t2, t2, t3
+    li t5, 320
+    li t6, 15
+    mul t5, t5, t6
+    add t2, t2, t5
+    lbu t3, 2(t2) # 2 colunas pixels transparentes
+    li t4, 88
+    beq t3, t4, ep2
+    lbu t3, 13(t2) # 2 colunas pixels transparentes
+    beq t3, t4, ep2
+   
+    # change player position
+    sh t1, 14(a0)
+    j ep2
 
     d:
-    lhu t0, 12(a0)
     add t0, t0, a1
+   
+    # checa se pode ir para direita
+    
+   	# checa se eh fora do mapa
+    li t5 306 # 320 - 14
+    bge t0, t5, ep2
+    
+    # checa se eh parede
+    add t2, t2, a1
+    addi t2, t2, 14 # 1 coluna de pixeis transparentes
+    lbu t3, (t2)
+    li t4, 88
+    beq t3, t4, ep2
+    li t5, 320
+    li t6, 15
+    mul t5, t5, t6
+    add t2, t2, t5
+    lbu t3, (t2)
+    beq t3, t4, ep2
+   
+    # change player position
     sh t0, 12(a0)
+    
+    ep2:
     ret
 
 
@@ -285,7 +374,7 @@ move_sprite:
 change_dir:
 	
 	# checa se tecla pressionada
-	li t0, 0xff200000
+	li t0, MMIO
 	lw t1, (t0)
 	andi t1, t1, 1
 	beqz t1, ep1 # se nao tiver retorna
