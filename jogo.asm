@@ -1,10 +1,21 @@
 .data
 .include "levels/placeholder_map.data"
 .include "sprites/Zenon.data"
+.include "sprites/Rosary.data"
 
+.include "MACROSv24.s"
 .eqv MMIO 0xff200000
+.eqv FRAME1 0xff000000
+.eqv FRAME2 0xff100000
 .eqv FRAME_SELECTOR 0xff200604
-.text 
+
+.text
+
+	# populate map
+	la a0, map
+	la a1, points
+	la a2, rosary
+	call populate_map
 
     # render map both frames
     la a0, map
@@ -12,7 +23,12 @@
     call render
     li a1, 1
     call render
-	
+    
+    li s0, 0 # frame
+    li s1, 0 # points
+    
+    mv a0, s1
+    call print_score
     main_loop:
     
 		xori s0, s0, 1
@@ -40,7 +56,14 @@
         # move player
         la a0, player
         li a1, 1 # 1 rars da erro, fpgrars funciona
+        mv a2, s1
         call move_sprite
+        
+        # checa colisao com pontos
+        la a0, player
+        la a1, points
+        call check_collision
+        mv s1, a0
         
         # check if key pressed and handle it
         call change_dir
@@ -53,7 +76,7 @@
 
 # render image according to images type
 # 4 background
-# 12 static image
+# 8 static
 # 24 image with direction, and position
 # args:
 # a0 -> endereco imagem tamanho multiplo de 4
@@ -72,7 +95,7 @@ render:
     lw t1, (a0)
     li t2, 4
     beq t1, t2, bg
-    li t2, 12
+    li t2, 8
     beq t1, t2, static
     li t2, 20
     beq t1, t2, moving
@@ -96,39 +119,38 @@ render:
         
     # render static image (fix)
     static:
-        # t0 = primeiro pixel
-        li t0, 0xff000000
-        li t1, 320
-        mul t1, t1, a2
-        add t1, t1, a1
-        add t0, t0, t1
-
-        # pega imagem e tamanho
-        mv t6, a0
-        lw t1, 4(t6) # colunas x
-        lw t2, 8(t6) # linhas y
-        addi t6, t6, 12
+    	ebreak
+        # pega largura e altura
+        lhu t1, 4(t6) # colunas x
+        lhu t2, 6(t6) # linhas y
+        addi t6, t6, 8
+        
+        # primeiro pixel bitmap
+        li t3, 320
+        mul t3, t3, a3
+        add t3, t3, a2
+        add t0, t0, t3
 
         # loop linha y
         li t3, 0
         l5:
-            bge t3, t2, e2
+            bge t3, t2, e5
         
             # loop coluna x
             li t4, 0
             l6:
-                bge t4, t1, e3
+                bge t4, t1, e6
                 lw t5, (t6)
                 sw t5, (t0)
                 addi t6, t6, 4
                 addi t0, t0, 4
                 addi t4, t4, 4
-                j l3
+                j l6
             e6:
             addi t0, t0, 320
             sub t0, t0, t1
             addi t3, t3, 1
-            j l2
+            j l5
         e5:
 
         ret
@@ -149,7 +171,7 @@ render:
         lhu t3, 12(a0) # x
         lhu t4, 14(a0) # y
         
-        # t4 = primeiro pixel
+        # t0 = primeiro pixel
         li t5, 320
         mul t5, t5, t4
         add t5, t5, t3
@@ -176,7 +198,6 @@ render:
             addi t3, t3, 1
             j l2
         e2:
-
         ret
 
 
@@ -204,7 +225,7 @@ erase_sprite:
     add t0, t2, t3
     add t1, t4, t3
 
-    # pega imagem e tamanho
+    # pega largura e altura
     lhu t2, 4(a0) # colunas x
     lhu t3, 6(a0) # linhas y
 
@@ -280,6 +301,8 @@ move_sprite:
     beq t3, t4, ep2
     lbu t3, 13(t2) # 16 largura personagem # 2 colunas pixels transparentes
     beq t3, t4, ep2
+    lbu t3, 6(t2) # meio personagem
+    beq t3, t4, ep2
    
     # change player position
     sh t1, 14(a0)
@@ -291,7 +314,7 @@ move_sprite:
     # checa se pode ir para esquerda
     
     # checa se fora do mapa
-    li t6 46
+    li t6, 46
     ble t0, t6, ep2
     
     # checa se eh parede
@@ -305,6 +328,13 @@ move_sprite:
     mul t5, t5, t6
     add t2, t2, t5
     lbu t3, (t2)
+    beq t3, t4, ep2
+    li t5, 320
+    li t6, 8 # meio personagem
+    mul t5, t5, t6
+    sub t2, t2, t5
+    lbu t3, (t2)
+    
     beq t3, t4, ep2
    
     # change player position
@@ -333,6 +363,9 @@ move_sprite:
     beq t3, t4, ep2
     lbu t3, 13(t2) # 2 colunas pixels transparentes
     beq t3, t4, ep2
+    lbu t3, 6(t2) # meio personagem
+    beq t3, t4, ep2
+    
    
     # change player position
     sh t1, 14(a0)
@@ -357,6 +390,12 @@ move_sprite:
     li t6, 15
     mul t5, t5, t6
     add t2, t2, t5
+    lbu t3, (t2)
+    beq t3, t4, ep2
+    li t5, 320
+    li t6, 8 # meio personagem
+    mul t5, t5, t6
+    sub t2, t2, t5
     lbu t3, (t2)
     beq t3, t4, ep2
    
@@ -425,3 +464,263 @@ change_dir:
     ep1:
 	ret
 	
+
+# puts points and pills on map
+# a0 -> map
+# a1 -> positions preceded by the numbe of points
+# a2 -> points image
+populate_map:
+	lw t0, (a1) # quantidade de pontos
+	addi t2, a1, 4
+	
+	li t1, 0 # counter
+	l9:
+		bge t1, t0, e9
+		
+		# get x y
+		lhu t3, (t2) # x
+		lhu t4, 2(t2) # y
+		addi t2, t2, 4
+		
+		# t5 map position
+		mv t5, a0
+		addi t5, t5, 4
+		li t6, 320
+		mul t6, t6, t4
+		add t6, t6, t3
+		add t5, t5, t6
+		
+		# save registers to stack
+		addi sp, sp, -20
+		sw t0, 16(sp)
+		sw t1, 12(sp)
+		sw t2, 8(sp)
+		sw t3, 4(sp)
+		sw t4, (sp)
+		
+		# print on map
+		
+		lhu t0, (a2) # colunas x largura
+		lhu t1, 2(a2) # linhas y altura
+		mv t2, a2
+		addi t2, t2, 4
+		
+		# loop linha y
+		li t3, 0
+		l10:
+			bge t3, t1, e10
+			# loop coluna y
+			li t4, 0
+			l11:
+				bge t4, t0, e11
+				lbu t6, (t2)
+				addi t2, t2, 1
+				
+				# checa cor transparente
+				addi t6, t6, -199
+				beqz t6, ep3
+				addi t6, t6, 199
+				
+				sb t6, (t5)
+				
+				ep3:
+				addi t5, t5, 1
+				addi t4, t4, 1
+				j l11
+			e11:
+			
+			addi t5, t5, 320
+			sub t5, t5, t0
+			
+			addi t3, t3, 1
+			j l10
+		e10:
+		
+		# load registers on stack
+		lw t0, 16(sp)
+		lw t1, 12(sp)
+		lw t2, 8(sp)
+		lw t3, 4(sp)
+		lw t4, (sp)
+		addi sp, sp, 20
+		
+		addi t1, t1, 1
+		j l9
+	e9:
+	
+	ret
+
+# checa se jogador colidiu com ponto
+# e se for o caso apaga e retorna 1
+# a0 -> sprite jogador, com sua posicao
+# a1 -> posicoes pontos
+# a2 -> pontos atuais
+# retorna a0, quantidade de pontos final
+check_collision:
+	# pega numero de pontos
+	mv t0, a1
+	lw t1, (t0)
+	addi t0, t0, 4
+	
+	# pega posicao jogador
+	lhu t5, 16(a0)
+	lhu t6, 18(a0)
+	
+	mv a0, a2 # return
+	
+	# loop todos os pontos
+	li t2, 0
+	l12:
+		bge t2, t1, e12
+		lhu t3, (t0)
+		lhu t4, 2(t0)
+		addi t0, t0, 4
+		
+		addi sp, sp, -8
+		sw t3, 4(sp)
+		sw t4, (sp)
+		
+		# checa colisao
+		sub t3, t3, t5
+		bgez t3, ep5
+		sub t3, zero, t3
+		ep5:
+		addi t3, t3, -8
+		bgtz t3, ep4
+		sub t4, t4, t6
+		bgez t4, ep6
+		sub t4, zero, t4
+		ep6:
+		addi t4, t4, -8
+		bgtz t4, ep4
+			li t1, 0
+			sw t1, -4(t0) # retira ponto da lista zera
+			
+			# apaga sprite do mapa
+			lw t3, 4(sp)
+			lw t4, (sp)
+			
+			sw a0, 4(sp)
+			sw ra, (sp)
+			
+			li a0, 8
+			mv a1, t3
+			mv a2, t4
+			call erase_from_map
+			
+			
+			
+			lw a0, 4(sp)
+			lw ra, (sp)
+			addi sp, sp, 8
+			
+			
+			addi a0, a0, 1
+			
+			addi sp, sp, -28
+			sw a0, 24(sp)
+			sw a1, 20(sp)
+			sw a2, 16(sp)
+			sw a3, 12(sp)
+			sw a4, 8(sp)
+			sw a7, 4(sp)
+			sw ra, (sp)
+			
+			call print_score
+			
+			lw a0, 24(sp)
+			lw a1, 20(sp)
+			lw a2, 16(sp)
+			lw a3, 12(sp)
+			lw a4, 8(sp)
+			lw a7, 4(sp)
+			lw ra, (sp)
+			addi sp, sp, 28
+			
+			ret
+		ep4:
+	
+		addi t2, t2, 1
+		j l12
+	e12:
+	ret
+	
+
+# printa score atual nos dois frames
+# a0 -> score
+# usa registradores:
+# a0 - a4, a7
+print_score:
+	addi sp, sp, -4
+	sw a0, (sp)
+	
+    li a7, 101
+    li a1, 20
+    li a2, 20
+    li a3, 0x89ad
+    li a4, 0
+    ecall
+    
+    lw a0, (sp)
+    addi sp, sp, 4
+    li a7, 101
+    li a1, 20
+    li a2, 20
+    li a3, 0x89ad
+    li a4, 1
+    ecall
+	
+	ret
+
+# erases sprite from map and bitmap
+# a0 -> sprite size (square)
+# a1 -> x
+# a2 -> y
+erase_from_map:
+	la t0, map
+	addi t0, t0, 4
+	li t4, FRAME1
+	li t5, FRAME2
+	
+	# first pixel
+	li t1, 320
+	mul t1, t1, a2
+	add t1, t1, a1
+	add t0, t0, t1
+	add t4, t4, t1
+	add t5, t5, t1
+	
+	# loop linha y
+	li t1, 0
+	l13:
+		bge t1, a0, e13
+		li t2, 0
+		l14:
+			bge t2, a0, e14
+			li t3, 104
+			sb t3, (t0)
+			sb t3, (t4)
+			sb t3, (t5)
+			addi t4, t4, 1
+			addi t5, t5, 1
+			addi t0, t0, 1
+			
+			addi t2, t2, 1
+			j l14
+		e14:
+		
+		addi t4, t4, 320
+		addi t5, t5, 320
+		addi t0, t0, 320
+		sub t0, t0, a0	
+		sub t4, t4, a0
+		sub t5, t5, a0
+		
+		addi t1, t1, 1
+		j l13
+	e13:
+	
+	ret
+	
+
+.include "SYSTEMv24.s"
