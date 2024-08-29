@@ -9,6 +9,9 @@ score: .string "score:"
 .eqv FRAME_SELECTOR 0xff200604
 
 .text
+
+	call MENU
+
     # render map both frames
     la a0, populated_map1
     li a1, 0
@@ -700,4 +703,5 @@ erase_collision:
 	ret
 	
 .include "songs.asm"
+.include "menu.asm"
 .include "SYSTEMv24.s"
