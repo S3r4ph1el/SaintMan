@@ -21,7 +21,7 @@ MENU:
 		li t1,0xFF200000		
 LOOP: 	lw t0,0(t1)			
 		andi t0,t0,0x0001
-		call PLAY1
+		call PLAY4
 		beq t0,zero,LOOP		
 		lw t2,4(t1)			
 		li t3, '1'

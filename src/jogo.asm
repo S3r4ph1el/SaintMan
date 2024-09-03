@@ -11,6 +11,7 @@ score: .string "score:"
 .text
 
 	call MENU
+    call SETUP1
 
     # render map both frames
     la a0, populated_map1
@@ -61,7 +62,7 @@ score: .string "score:"
         call change_dir
         
         # play music
-        call PLAY3
+        call PLAY1
 
         j main_loop
 
