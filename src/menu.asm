@@ -43,7 +43,6 @@ CONTINUE:
 		call PRINTHISTORY
 		la a0, HistoryScreen_5
 		call PRINTHISTORY
-		call SETUP3
 		
 		lw ra, (sp)
 		addi sp, sp, 4
@@ -61,9 +60,9 @@ PRINTHISTORY:
 		call render
 		
 		li t1,0xFF200000		
-LOOP_H: lw t0,0(t1)			
+LOOP_H: lw t0,0(t1)		
 		andi t0,t0,0x0001
-		call PLAY1
+		call PLAY4
 		beq t0,zero,LOOP_H		
 		lw t2,4(t1)			
 		li t3, 'e'
