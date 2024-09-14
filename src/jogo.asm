@@ -1,5 +1,5 @@
 .data
-.include "../levels/placeholder_map_1.data"
+.include "../levels/map1.data"
 .include "../sprites/Zenon.data"
 .include "../sprites/Rosary.data"
 score: .string "score:"
