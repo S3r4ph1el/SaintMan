@@ -8,6 +8,8 @@ score: .string "score:"
 .include "MACROSv24.s"
 .eqv MMIO 0xff200000
 .eqv FRAME_SELECTOR 0xff200604
+.eqv FRAME0 0xff000000
+.eqv FRAME1 0xff100000
 
 .text
   # call MENU
@@ -23,7 +25,7 @@ score: .string "score:"
 
   li s0, 0 # frame variavel global
   li s1, 0 # points variavel global
-  
+
   # print player and enemies
   call render_all
  
@@ -32,14 +34,14 @@ score: .string "score:"
   la a0, score
   li a1, 0
   li a2, 4
-  li a3, 0x43ff
+  li a3, 0xc7ff
   li a4, 0
   ecall
   li a7, 104
   la a0, score
   li a1, 0
   li a2, 4
-  li a3, 0x43ff
+  li a3, 0xc7ff
   li a4, 1
   ecall
 
@@ -64,6 +66,10 @@ score: .string "score:"
     li a0, 40
     ecall
 
+    # change enemies directions
+    la a0, blue
+    call change_dir_enemy
+
     # check if key pressed and handle it
     call change_dir
    
@@ -74,6 +80,199 @@ score: .string "score:"
   main_exit:
   li a7, 10
   ecall
+
+
+# muda direcao inimigo
+# args:
+# a0 -> inimigo
+change_dir_enemy:
+  # inicializa registradores
+  la t2, collision_map1
+  lhu t0, 8(a0) # x
+  lhu t1, 10(a0) # y
+  li t3, 320
+  mul t3, t3, t1
+  add t3, t3, t0
+  add t2, t2, t3 # t2 posicao no mapa
+
+  li t5, -1 # direcao
+  addi sp, sp, -12
+  sw t5, 4(sp)
+  sw t2, 8(sp)
+  
+  # checa se pode ir para cima
+  addi t1, t1, -1
+  bltz t1, ep7
+
+  # checa se eh parede
+  addi t2, t2, -320
+  addi t2, t2, 2 # 2 colunas pixels transparentes
+  lbu t3, (t2) 
+  beqz t3, ep7
+  addi t2, t2, 11 # 16 largura personagem # 2 colunas pixels transparentes
+  lbu t3, (t2) 
+  beqz t3, ep7
+  addi t2, t2, -5 # meio personagem
+  lbu t3, (t2) 
+  beqz t3, ep7
+  
+  # calcula distancia
+  la t3, player
+  lhu t4, 8(t3)
+  lhu t3, 10(t3)
+  sub t4, t4, t0
+  sub t3, t3, t1
+  mul t4, t4, t4
+  mul t3, t3, t3
+  add t3, t3, t4
+  sw t3, (sp)
+  li t5, 0
+  sw t5, 4(sp)
+
+  ep7:
+
+  # checa se pode ir para esquerda
+  addi t1, t1, 1
+  addi t0, t0, -1
+
+  # checa se fora do mapa
+  li t6, 46
+  ble t0, t6, ep8
+
+  # checa se eh parede
+  lw t2, 8(sp)
+  lbu t3, (t2)
+  beqz t3, ep8
+  li t5, 320
+  li t6, 15
+  mul t5, t5, t6
+  add t2, t2, t5
+  lbu t3, (t2)
+  beqz t3, ep8
+  li t5, 320
+  li t6, 8 # meio personagem
+  mul t5, t5, t6
+  sub t2, t2, t5
+  lbu t3, (t2)
+  beqz t3, ep8
+
+  # calcula discancia
+  la t3, player
+  lhu t4, 8(t3)
+  lhu t3, 10(t3)
+  sub t4, t4, t0
+  sub t3, t3, t1
+  mul t4, t4, t4
+  mul t3, t3, t3
+  add t3, t3, t4
+  lw t5, 4(sp)
+  bltz t5, ep12
+    lw t6, (sp)
+    bge t3, t6, ep8
+      ep12:
+      sw t3, (sp)
+      li t5, 1
+      sw t5, 4(sp)
+
+  ep8:
+
+  # checa se pode ir para baixo
+  addi t1, t1, 1
+  addi t0, t0, 1
+
+  # checa se eh fora do mapa
+  li t5 224 # 240 - 16
+  bge t1, t5, ep9
+
+  # checa se eh parede
+  lw t2, 8(sp)
+  addi t2, t2, 320
+  li t5, 320
+  li t6, 15
+  mul t5, t5, t6
+  add t2, t2, t5
+  addi t2, t2, 2 # 2 colunas pixels transparentes
+  lbu t3, (t2) 
+  beqz t3, ep9
+  addi t2, t2, 11 # 2 colunas pixels transparentes
+  lbu t3, (t2)
+  beqz t3, ep9
+  addi t2, t2, -5 # meio personagem
+  lbu t3, (t2) 
+  beqz t3, ep9
+  
+
+  # calcula discancia
+  la t3, player
+  lhu t4, 8(t3)
+  lhu t3, 10(t3)
+  sub t4, t4, t0
+  sub t3, t3, t1
+  mul t4, t4, t4
+  mul t3, t3, t3
+  add t3, t3, t4
+  lw t5, 4(sp)
+  bltz t5, ep13
+    lw t6, (sp)
+    bge t3, t6, ep9
+      ep13:
+      sw t3, (sp)
+      li t5, 2
+      sw t5, 4(sp)
+
+  ep9:
+  # checa se pode ir para direita
+  addi t1, t1, -1
+  addi t0, t0, 1
+
+  # checa se eh fora do mapa
+  li t5 306 # 320 - 14
+  bge t0, t5, ep10
+
+  # checa se eh parede
+  lw t2, 8(sp)
+  addi t2, t2, 15 # 1 coluna de pixeis transparentes
+  lbu t3, (t2)
+  beqz t3, ep10
+  li t5, 320
+  li t6, 15
+  mul t5, t5, t6
+  add t2, t2, t5
+  lbu t3, (t2)
+  beqz t3, ep10
+  li t5, 320
+  li t6, 8 # meio personagem
+  mul t5, t5, t6
+  sub t2, t2, t5
+  lbu t3, (t2)
+  beqz t3, ep10
+
+  # calcula discancia
+  la t3, player
+  lhu t4, 8(t3)
+  lhu t3, 10(t3)
+  sub t4, t4, t0
+  sub t3, t3, t1
+  mul t4, t4, t4
+  mul t3, t3, t3
+  add t3, t3, t4
+  lw t5, 4(sp)
+  bltz t5, ep14
+    lw t6, (sp)
+    bge t3, t6, ep10
+      ep14:
+      sw t3, (sp)
+      li t5, 3
+      sw t5, 4(sp)
+  ep10:
+  
+  lw t5 4(sp) 
+  addi sp, sp, 12
+  bltz t5, ep11
+    sw t5, 4(a0)
+  ep11:
+
+  ret
 
 
 # move all enemies
@@ -176,6 +375,9 @@ render_all:
   la a0, map1
   mv a1, s0
   xori a1, a1, 1
+  slli a1, a1, 20
+  li t1, FRAME0
+  add a1, a1, t1
   lhu a2, 12(t0)
   lhu a3, 14(t0)
   mv a4, t3
@@ -188,6 +390,9 @@ render_all:
   la a0, populated_map1
   mv a1, s0
   xori a1, a1, 1
+  slli a1, a1, 20
+  li t1, FRAME0
+  add a1, a1, t1
   lhu a2, 12(t0)
   lhu a3, 14(t0)
   mv a4, t3
@@ -305,22 +510,20 @@ render_sprite:
   
 # erase sprite
 # args:
-# a0 -> background image (map)
-# a1 -> frame
-# a4 -> largura
-# a5 -> altura
+# a0 -> imagem para substituir (map)
+# a1 -> endereco onde apagar
+# a2 -> largura
+# a3 -> altura
+# a4 -> x
+# a5 -> y
 erase:
   # t0 = primeiro pixel bg
-  # t1 = primeiro pixel bitmap
-  li t4, 0xff0
-  add t4, t4, a1
-  slli t4, t4, 20
-  mv t2, a0
+  # t1 = primeiro pixel apagar(bitmap)
   li t3, 320
   mul t3, t3, a3
   add t3, t3, a2
-  add t0, t2, t3
-  add t1, t4, t3
+  add t0, a0, t3
+  add t1, a1, t3
 
   # loop linha y
   li t4, 0
@@ -345,6 +548,7 @@ erase:
     j l7
   e7:
   ret
+
 
 # move sprite
 # checa se o sprite pode se mover e colisoes
@@ -416,7 +620,7 @@ move_sprite:
       lbu t3, (t2)
       beq t3, t4, if_ponto
 
-      j ep2
+    j ep2
 
   a:
     sub t0, t0, a1
@@ -519,7 +723,7 @@ move_sprite:
   d:
     add t0, t0, a1
 
-    # checa se pode ir para direita
+# checa se pode ir para direita
 
      # checa se eh fora do mapa
     li t5 306 # 320 - 14
@@ -604,7 +808,7 @@ move_sprite:
     sw a5, (sp)
 
     la a0, map1
-    li a1, 0
+    li a1, FRAME0
     mv a2, t0
     mv a3, t1
     la t2, rosary
@@ -612,7 +816,10 @@ move_sprite:
     lhu a5, 2(t2)
     call erase
 
-    li a1, 1
+    li a1, FRAME1
+    call erase
+
+    la a1, populated_map1
     call erase
 
     lw ra, 32(sp)
@@ -722,19 +929,32 @@ change_dir:
 
 # printa score atual nos dois frames
 print_score:
-  addi sp, sp, -24
+  addi sp, sp, -32
   sw a0, (sp)
   sw a1, 4(sp)
   sw a2, 8(sp)
   sw a3, 12(sp)
   sw a4, 16(sp)
-  sw a7, 20(sp)
+  sw a5, 20(sp)
+  sw a7, 24(sp)
+  sw ra, 28(sp)
+
+  la a0, map1
+  li a1, FRAME0
+  li a2, 0
+  li a3, 16
+  li a4, 47
+  li a5, 16
+  call erase
+  li a1, FRAME1
+  call erase
+   
 
   li a7, 101
   mv a0, s1
   li a1, 20
   li a2, 20
-  li a3, 0x43ff
+  li a3, 0xc7ff
   li a4, 0
   ecall
  
@@ -742,7 +962,7 @@ print_score:
   mv a0, s1
   li a1, 20
   li a2, 20
-  li a3, 0x43ff
+  li a3, 0xc7ff
   li a4, 1
   ecall
   
@@ -751,8 +971,10 @@ print_score:
   lw a2, 8(sp)
   lw a3, 12(sp)
   lw a4, 16(sp)
-  lw a7, 20(sp)
-  addi sp, sp, 24
+  lw a5, 20(sp)
+  lw a7, 24(sp)
+  lw ra, 28(sp)
+  addi sp, sp, 32
 
   ret
 
