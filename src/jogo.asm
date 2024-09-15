@@ -2,6 +2,7 @@
 .include "../levels/maps_data/map1.data"
 .include "../levels/maps_data/map2.data"
 .include "../levels/maps_data/map3.data"
+.include "../art/main_art/data/LevelCompleteScreen.data"
 .include "../sprites/Zenon.data"
 .include "../sprites/Rosary.data"
 score: .string "score:"
@@ -28,8 +29,9 @@ score: .string "score:"
     li a1, 0
     call render_sprite
     
-    li s0, 0 # frame variavel global
-    li s1, 0 # points variavel global
+    li s0, 0 	# frame variavel global
+    li s1, 0 	# points variavel global
+	li s2, 121 	# termino da fase variavel global
     
     # print "score" string
     
@@ -65,8 +67,16 @@ score: .string "score:"
         
         # play music
         call PLAY1
-
-        j main_loop
+		
+		bgtz s2, main_loop
+			la a0, LevelCompleteScreen # Chama tela de LevelComplete
+			li a4, 0
+			mv a1, s0
+			call render
+			
+			li a7, 32
+			li a0, 4000
+			ecall
 
     main_exit:
     li a7, 10
@@ -434,6 +444,9 @@ move_sprite:
     j ep2
     
     if_ponto:
+	
+	addi s2, s2, -1  # Decrementação para contagem de Score
+	
     # find posicao inicio imagem t0 = x t1 = y 
     li t4, 63
     l9:
@@ -521,7 +534,6 @@ move_sprite:
 	
 	lw ra, (sp)
 	addi sp, sp, 4
-    
 
     ep2:
     
