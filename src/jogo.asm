@@ -52,59 +52,6 @@ score: .string "score:"
   main_loop: 
     # move player
     la a0, player
-<<<<<<< HEAD
-    li a1, 0
-    call render_sprite
-    
-    li s0, 0 	# frame variavel global
-    li s1, 0 	# points variavel global
-	li s2, 121 	# termino da fase variavel global
-    
-    # print "score" string
-    
-    li a7, 104
-    la a0, score
-    li a1, 0
-    li a2, 4
-    li a3, 0x43ff
-    li a4, 0
-    ecall
-    li a7, 104
-    la a0, score
-    li a1, 0
-    li a2, 4
-    li a3, 0x43ff
-    li a4, 1
-    ecall
-    
-    call print_score
-    main_loop: 
-        # move player
-        la a0, player
-        li a1, 1 # 1 rars da erro, fpgrars funciona
-        call move_sprite
-        
-        # sleep
-        li a7, 32
-        li a0, 40
-        ecall
-
-        # check if key pressed and handle it
-        call change_dir
-        
-        # play music
-        call PLAY1
-		
-		bgtz s2, main_loop
-			la a0, LevelCompleteScreen # Chama tela de LevelComplete
-			li a4, 0
-			mv a1, s0
-			call render
-			
-			li a7, 32
-			li a0, 4000
-			ecall
-=======
     li a1, 1
     li a2, 0
     call move_sprite
@@ -114,7 +61,6 @@ score: .string "score:"
 
     # print screen
     call render_all
->>>>>>> b93d199c01577626d45101ec55a0621a5af04d44
 
     call check_collisions
 
@@ -399,7 +345,7 @@ check_collision:
     ret
   ep6:
   
-  call main_exit 
+  call GAMEOVER
 
 # renders all sprites, players and enemies
 render_all:
@@ -807,33 +753,6 @@ move_sprite:
 
     # change player position
     sh t0, 8(a0)
-<<<<<<< HEAD
-    
-    # checa se ponto
-    mv t2, t4
-    li t4, 63
-    lbu t3, (t2)
-    beq t3, t4, if_ponto
-    li t5, 320
-    li t6, 15
-    mul t5, t5, t6
-    add t2, t2, t5
-    lbu t3, (t2)
-    beq t3, t4, if_ponto
-    li t5, 320
-    li t6, 8 # meio personagem
-    mul t5, t5, t6
-    sub t2, t2, t5
-    lbu t3, (t2)
-    beq t3, t4, if_ponto
-    
-    j ep2
-    
-    if_ponto:
-	
-	addi s2, s2, -1  # Decrementação para contagem de Score
-	
-=======
 
     bnez a2, ep2
       # checa se ponto
@@ -857,7 +776,6 @@ move_sprite:
       j ep2
 
   if_ponto:
->>>>>>> b93d199c01577626d45101ec55a0621a5af04d44
     # find posicao inicio imagem t0 = x t1 = y 
     li t4, 63
     l9:
@@ -918,48 +836,9 @@ move_sprite:
     lw a5, (sp)
     addi sp, sp, 36
 
-<<<<<<< HEAD
-    
-	# apaga do mapa de colisoes
-	addi sp, sp, -16
-	sw a0, 12(sp)
-	sw a1, 8(sp)
-	sw a2, 4(sp)
-	sw ra, (sp)
-	la t2, rosary
-	
-	lhu a0, (t2) 
-	lhu a1, 2(t2)
-	mv a2, t0
-	mv a3, t1
-	call erase_collision
-	lw a0, 12(sp)
-	lw a1, 8(sp)
-	lw a2, 4(sp)
-	lw ra, (sp)
-	addi sp, sp, 16
-	
-    # print score
-    
-	addi sp, sp, -4
-	sw ra, (sp)
-	
-	addi s1, s1, 1
-	call print_score
-	
-	lw ra, (sp)
-	addi sp, sp, 4
-
-    ep2:
-    
-    # printa jogador
-    addi sp, sp, -8
-    sw ra, (sp)
-=======
     # apaga do mapa de colisoes
     addi sp, sp, -24
     sw a0, (sp)
->>>>>>> b93d199c01577626d45101ec55a0621a5af04d44
     sw a1, 4(sp)
     sw a2, 8(sp)
     sw a3, 12(sp)
@@ -1141,5 +1020,6 @@ erase_collision:
 
 .include "songs.asm"
 .include "menu.asm"
+.include "effects.asm"
 .include "SYSTEMv24.s"
 
