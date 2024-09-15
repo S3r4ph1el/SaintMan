@@ -1,5 +1,7 @@
 .data
-.include "../levels/map1.data"
+.include "../levels/maps_data/map1.data"
+.include "../levels/maps_data/map2.data"
+.include "../levels/maps_data/map3.data"
 .include "../sprites/Zenon.data"
 .include "../sprites/Rosary.data"
 score: .string "score:"
