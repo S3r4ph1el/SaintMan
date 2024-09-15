@@ -10,7 +10,7 @@
 .text
 
 MENU:
-	
+		li s6, 1
 		addi sp, sp, -4
 		sw ra, (sp)
 		la a0, MenuScreen
@@ -46,7 +46,7 @@ CONTINUE:
 		
 		lw ra, (sp)
 		addi sp, sp, 4
-		ret
+		j START
 
 # Mostrar história do jogo e espera tecla E para continuar
 # ARGS:

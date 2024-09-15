@@ -3,6 +3,8 @@
 .include "../levels/maps_data/map2.data"
 .include "../levels/maps_data/map3.data"
 .include "../art/main_art/data/LevelCompleteScreen.data"
+.include "../art/main_art/data/GameOver.data"
+.include "../sprites/Eucharist.data"
 .include "../sprites/Zenon.data"
 .include "../sprites/Rosary.data"
 .include "../sprites/blue.data"
@@ -15,8 +17,9 @@ score: .string "score:"
 .eqv FRAME1 0xff100000
 
 .text
-  # call MENU
-  call SETUP1
+  call MENU
+  START:
+  call SETUP
 
   # render map both frames
   la a0, populated_map1
@@ -52,59 +55,6 @@ score: .string "score:"
   main_loop: 
     # move player
     la a0, player
-<<<<<<< HEAD
-    li a1, 0
-    call render_sprite
-    
-    li s0, 0 	# frame variavel global
-    li s1, 0 	# points variavel global
-	li s2, 121 	# termino da fase variavel global
-    
-    # print "score" string
-    
-    li a7, 104
-    la a0, score
-    li a1, 0
-    li a2, 4
-    li a3, 0x43ff
-    li a4, 0
-    ecall
-    li a7, 104
-    la a0, score
-    li a1, 0
-    li a2, 4
-    li a3, 0x43ff
-    li a4, 1
-    ecall
-    
-    call print_score
-    main_loop: 
-        # move player
-        la a0, player
-        li a1, 1 # 1 rars da erro, fpgrars funciona
-        call move_sprite
-        
-        # sleep
-        li a7, 32
-        li a0, 40
-        ecall
-
-        # check if key pressed and handle it
-        call change_dir
-        
-        # play music
-        call PLAY1
-		
-		bgtz s2, main_loop
-			la a0, LevelCompleteScreen # Chama tela de LevelComplete
-			li a4, 0
-			mv a1, s0
-			call render
-			
-			li a7, 32
-			li a0, 4000
-			ecall
-=======
     li a1, 1
     li a2, 0
     call move_sprite
@@ -114,7 +64,6 @@ score: .string "score:"
 
     # print screen
     call render_all
->>>>>>> b93d199c01577626d45101ec55a0621a5af04d44
 
     call check_collisions
 
@@ -131,7 +80,7 @@ score: .string "score:"
     call change_dir
    
     # play music
-    call PLAY1
+    call PLAY
     j main_loop
 
   main_exit:
@@ -399,7 +348,26 @@ check_collision:
     ret
   ep6:
   
-  call main_exit 
+  addi sp, sp, -4
+  sw ra, (sp)
+  la a0, GameOver         # verificar bug da imagem de gameover
+  li a1, 0
+  li a4, 0
+  call render
+  li t1,0xFF200000
+
+  call GAMEOVERSETUP
+  GAMEOVERLOOP:
+    lw t0,0(t1)
+    andi t0,t0,0x0001
+    call GAMEOVERPLAY
+    beq t0,zero, GAMEOVERLOOP
+    lw t2,4(t1)
+    li t3, '1'
+    beq t2, t3, MENU
+    li t3, '2'
+    beq t2, t3, main_exit
+    j GAMEOVERLOOP
 
 # renders all sprites, players and enemies
 render_all:
@@ -670,12 +638,20 @@ move_sprite:
       li t4, 63
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       addi t2, t2, 11 # 16 largura personagem # 2 colunas pixels transparentes
       lbu t3, (t2) 
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       addi t2, t2, -5 # meio personagem
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
 
     j ep2
 
@@ -716,18 +692,26 @@ move_sprite:
       lbu t3, (t2)
       li t4, 63
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       li t5, 320
       li t6, 15
       mul t5, t5, t6
       add t2, t2, t5
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       li t5, 320
       li t6, 8 # meio personagem
       mul t5, t5, t6
       sub t2, t2, t5
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
 
       j ep2
 
@@ -768,12 +752,20 @@ move_sprite:
       li t4, 63
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       addi t2, t2, 11 # 2 colunas pixels transparentes
-      lbu t3, (t2) 
+      lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       addi t2, t2, -5 # meio personagem
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
 
       j ep2
 
@@ -807,33 +799,6 @@ move_sprite:
 
     # change player position
     sh t0, 8(a0)
-<<<<<<< HEAD
-    
-    # checa se ponto
-    mv t2, t4
-    li t4, 63
-    lbu t3, (t2)
-    beq t3, t4, if_ponto
-    li t5, 320
-    li t6, 15
-    mul t5, t5, t6
-    add t2, t2, t5
-    lbu t3, (t2)
-    beq t3, t4, if_ponto
-    li t5, 320
-    li t6, 8 # meio personagem
-    mul t5, t5, t6
-    sub t2, t2, t5
-    lbu t3, (t2)
-    beq t3, t4, if_ponto
-    
-    j ep2
-    
-    if_ponto:
-	
-	addi s2, s2, -1  # Decrementação para contagem de Score
-	
-=======
 
     bnez a2, ep2
       # checa se ponto
@@ -841,24 +806,46 @@ move_sprite:
       li t4, 63
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       li t5, 320
       li t6, 15
       mul t5, t5, t6
       add t2, t2, t5
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
+      li t4, 63
       li t5, 320
       li t6, 8 # meio personagem
       mul t5, t5, t6
       sub t2, t2, t5
       lbu t3, (t2)
       beq t3, t4, if_ponto
+      li t4, 31
+      beq t3, t4, if_boost
 
       j ep2
 
   if_ponto:
->>>>>>> b93d199c01577626d45101ec55a0621a5af04d44
     # find posicao inicio imagem t0 = x t1 = y 
+    addi sp, sp, -24
+    sw a0, 20(sp)
+    sw a1, 16(sp)
+    sw a2, 12(sp)
+    sw a3, 8(sp)
+    sw a7, 4(sp)
+    sw ra, (sp)
+    call COIN             # efeito sonoro da pontuação
+    lw a0, 20(sp)
+    lw a1, 16(sp)
+    lw a2, 12(sp)
+    lw a3, 8(sp)
+    lw a7, 4(sp)
+    lw ra, (sp)
+    addi sp, sp, 24
     li t4, 63
     l9:
       addi t2, t2, -1
@@ -918,48 +905,9 @@ move_sprite:
     lw a5, (sp)
     addi sp, sp, 36
 
-<<<<<<< HEAD
-    
-	# apaga do mapa de colisoes
-	addi sp, sp, -16
-	sw a0, 12(sp)
-	sw a1, 8(sp)
-	sw a2, 4(sp)
-	sw ra, (sp)
-	la t2, rosary
-	
-	lhu a0, (t2) 
-	lhu a1, 2(t2)
-	mv a2, t0
-	mv a3, t1
-	call erase_collision
-	lw a0, 12(sp)
-	lw a1, 8(sp)
-	lw a2, 4(sp)
-	lw ra, (sp)
-	addi sp, sp, 16
-	
-    # print score
-    
-	addi sp, sp, -4
-	sw ra, (sp)
-	
-	addi s1, s1, 1
-	call print_score
-	
-	lw ra, (sp)
-	addi sp, sp, 4
-
-    ep2:
-    
-    # printa jogador
-    addi sp, sp, -8
-    sw ra, (sp)
-=======
     # apaga do mapa de colisoes
     addi sp, sp, -24
     sw a0, (sp)
->>>>>>> b93d199c01577626d45101ec55a0621a5af04d44
     sw a1, 4(sp)
     sw a2, 8(sp)
     sw a3, 12(sp)
@@ -992,6 +940,133 @@ move_sprite:
     addi sp, sp, 4
 
   ep2:
+
+  ret
+  
+  if_boost:
+    # find posicao inicio imagem t0 = x t1 = y 
+    addi sp, sp, -24
+    sw a0, 20(sp)
+    sw a1, 16(sp)
+    sw a2, 12(sp)
+    sw a3, 8(sp)
+    sw a7, 4(sp)
+    sw ra, (sp)
+    call COIN           # efeito sonoro da pontuação
+    lw a0, 20(sp)
+    lw a1, 16(sp)
+    lw a2, 12(sp)
+    lw a3, 8(sp)
+    lw a7, 4(sp)
+    lw ra, (sp)
+    sw a0, 20(sp)
+    sw a1, 16(sp)
+    sw a2, 12(sp)
+    sw a3, 8(sp)
+    sw a7, 4(sp)
+    sw ra, (sp)
+    call SETUP5          # efeito sonoro da pontuação
+    lw a0, 20(sp)
+    lw a1, 16(sp)
+    lw a2, 12(sp)
+    lw a3, 8(sp)
+    lw a7, 4(sp)
+    lw ra, (sp)
+    addi sp, sp, 24
+    li t4, 31
+    el9:
+      addi t2, t2, -1
+      lbu t3, (t2)
+      bne t3, t4, ee9
+      j el9
+    ee9:
+    addi t2, t2, 1
+    el10:
+      addi t2, t2, -320
+      lbu t3(t2)
+      bne t3, t4, ee10
+      j el10
+    ee10:
+    addi t2, t2, 320
+    la t3, collision_map1
+    sub t5, t2, t3
+    li t4, 320
+    remu t0, t5, t4
+    divu t1, t5, t4
+
+    # apaga sprite do bitmap
+    addi sp, sp, -36
+    sw ra, 32(sp)
+    sw t0, 28(sp)
+    sw t1, 24(sp)
+    sw a0, 20(sp)
+    sw a1, 16(sp)
+    sw a2, 12(sp)
+    sw a3, 8(sp)
+    sw a4, 4(sp)
+    sw a5, (sp)
+
+    la a0, map1
+    li a1, FRAME0
+    mv a2, t0
+    mv a3, t1
+    la t2, eucharist
+    lhu a4, (t2)
+    lhu a5, 2(t2)
+    call erase
+
+    li a1, FRAME1
+    call erase
+
+    la a1, populated_map1
+    call erase
+
+    lw ra, 32(sp)
+    lw t0, 28(sp)
+    lw t1, 24(sp)
+    lw a0, 20(sp)
+    lw a1, 16(sp)
+    lw a2, 12(sp)
+    lw a3, 8(sp)
+    lw a4, 4(sp)
+    lw a5, (sp)
+    addi sp, sp, 36
+
+    # apaga do mapa de colisoes
+    addi sp, sp, -24
+    sw a0, (sp)
+    sw a1, 4(sp)
+    sw a2, 8(sp)
+    sw a3, 12(sp)
+    sw a4, 16(sp)
+    sw ra, 20(sp)
+
+    la t2, eucharist
+    lhu a0, (t2) 
+    lhu a1, 2(t2)
+    mv a2, t0
+    mv a3, t1
+    call erase_collision
+
+    lw a0, (sp)
+    lw a1, 4(sp)
+    lw a2, 8(sp)
+    lw a3, 12(sp)
+    lw a4, 16(sp)
+    lw ra, 20(sp)
+    addi sp, sp, 24
+
+    # print score
+    addi sp, sp, -4
+    sw ra, (sp)
+
+    addi s1, s1, 1
+    call print_score
+
+    lw ra, (sp)
+    addi sp, sp, 4
+
+  eep2:
 
   ret
 
@@ -1139,6 +1214,7 @@ erase_collision:
 
   ret
 
+.include "effects.asm"
 .include "songs.asm"
 .include "menu.asm"
 .include "SYSTEMv24.s"

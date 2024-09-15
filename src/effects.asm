@@ -40,15 +40,10 @@ SLASHSTART:	beq s10,s9, RETURN
                 li a7, 30
                 ecall
                 add s7, s7, a0
-                sw s7, SLASHENDTIME, s6
+                sw s7, SLASHENDTIME, a7
                 addi s11,s11,8			
                 addi s10,s10,1
                 ret
-                
-GAMEOVER: j GAMEOVERSETUP
-          LOOP: blt s10, s9, GAMEOVERPLAY
-          beq s10, s9, RETURN
-          j LOOP
 
 GAMEOVERSETUP:	la s11,GAMEOVERLENGTH			
                 lw s9,0(s11)
@@ -70,7 +65,7 @@ GAMEOVERSTART:	beq s10,s9, RETURN
                 li a7, 30
                 ecall
                 add s7, s7, a0
-                sw s7, GAMEOVERENDTIME, s6
+                sw s7, GAMEOVERENDTIME, a7
                 addi s11,s11,8			
                 addi s10,s10,1
                 ret
