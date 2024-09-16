@@ -1,28 +1,29 @@
 .data
-.include "../levels/maps_data/map1.data"
-.include "../levels/maps_data/map2.data"
-.include "../levels/maps_data/map3.data"
-.include "../art/main_art/data/LevelCompleteScreen.data"
 .include "../art/main_art/data/GameOver.data"
 .include "../sprites/Eucharist.data"
-.include "../sprites/Zenon.data"
 .include "../sprites/Rosary.data"
-.include "../sprites/blue.data"
 score: .string "score:"
 
-.include "MACROSv24.s"
 .eqv MMIO 0xff200000
 .eqv FRAME_SELECTOR 0xff200604
 .eqv FRAME0 0xff000000
 .eqv FRAME1 0xff100000
 
 .text
-  call MENU
-  START:
-  call SETUP
+# funcao para cada nivel
+# implementa logica do jogo
+# args:
+# salvar posicao personagens na memoria 8(player) = x 10(player) = y
+# s2 -> quantidade de pontos no mapa
+# s3 -> map
+# s4 -> populated_map
+# s5 -> collision_map
+jogo:
+  addi sp, sp, -4
+  sw ra, (sp)
 
   # render map both frames
-  la a0, populated_map1
+  mv a0, s4
   li a1, 0
   li a4, 0
   call render 
@@ -83,17 +84,17 @@ score: .string "score:"
     call PLAY
     j main_loop
 
-  main_exit:
-  li a7, 10
-  ecall
-
+  game_loop_exit:
+  lw ra, (sp)
+  addi sp, sp, 4
+  ret
 
 # muda direcao inimigo
 # args:
 # a0 -> inimigo
 change_dir_enemy:
   # inicializa registradores
-  la t2, collision_map1
+  mv t2, s5
   lhu t0, 8(a0) # x
   lhu t1, 10(a0) # y
   li t3, 320
@@ -348,14 +349,15 @@ check_collision:
     ret
   ep6:
   
-  addi sp, sp, -4
-  sw ra, (sp)
+  addi sp, sp, 12 # sai jogo, limpa sp
   la a0, GameOver         # verificar bug da imagem de gameover
-  li a1, 0
+  mv a1, s0
   li a4, 0
   call render
-  li t1,0xFF200000
 
+  call reset_maps
+
+  li t1, MMIO
   call GAMEOVERSETUP
   GAMEOVERLOOP:
     lw t0,0(t1)
@@ -364,7 +366,7 @@ check_collision:
     beq t0,zero, GAMEOVERLOOP
     lw t2,4(t1)
     li t3, '1'
-    beq t2, t3, MENU
+    beq t2, t3, START_MAIN
     li t3, '2'
     beq t2, t3, main_exit
     j GAMEOVERLOOP
@@ -397,7 +399,7 @@ render_all:
   la t0, player
   lhu t3, (t0)
   lhu t4, 2(a0)
-  la a0, map1
+  mv a0, s3
   mv a1, s0
   xori a1, a1, 1
   slli a1, a1, 20
@@ -412,7 +414,7 @@ render_all:
   la t0, blue
   lhu t3, (t0)
   lhu t4, 2(t0)
-  la a0, populated_map1
+  mv a0, s4
   mv a1, s0
   xori a1, a1, 1
   slli a1, a1, 20
@@ -772,7 +774,7 @@ move_sprite:
   d:
     add t0, t0, a1
 
-# checa se pode ir para direita
+    # checa se pode ir para direita
 
      # checa se eh fora do mapa
     li t5 306 # 320 - 14
@@ -830,7 +832,6 @@ move_sprite:
       j ep2
 
   if_ponto:
-    # find posicao inicio imagem t0 = x t1 = y 
     addi sp, sp, -24
     sw a0, 20(sp)
     sw a1, 16(sp)
@@ -846,6 +847,8 @@ move_sprite:
     lw a7, 4(sp)
     lw ra, (sp)
     addi sp, sp, 24
+
+    # find posicao inicio imagem t0 = x t1 = y 
     li t4, 63
     l9:
       addi t2, t2, -1
@@ -861,7 +864,7 @@ move_sprite:
       j l10
     e10:
     addi t2, t2, 320
-    la t3, collision_map1
+    mv t3, s5
     sub t5, t2, t3
     li t4, 320
     remu t0, t5, t4
@@ -879,7 +882,7 @@ move_sprite:
     sw a4, 4(sp)
     sw a5, (sp)
 
-    la a0, map1
+    mv a0, s3
     li a1, FRAME0
     mv a2, t0
     mv a3, t1
@@ -891,7 +894,7 @@ move_sprite:
     li a1, FRAME1
     call erase
 
-    la a1, populated_map1
+    mv a1, s4
     call erase
 
     lw ra, 32(sp)
@@ -938,27 +941,10 @@ move_sprite:
 
     lw ra, (sp)
     addi sp, sp, 4
+    j ep2
 
-  ep2:
-
-  ret
-  
   if_boost:
-    # find posicao inicio imagem t0 = x t1 = y 
     addi sp, sp, -24
-    sw a0, 20(sp)
-    sw a1, 16(sp)
-    sw a2, 12(sp)
-    sw a3, 8(sp)
-    sw a7, 4(sp)
-    sw ra, (sp)
-    call COIN           # efeito sonoro da pontuação
-    lw a0, 20(sp)
-    lw a1, 16(sp)
-    lw a2, 12(sp)
-    lw a3, 8(sp)
-    lw a7, 4(sp)
-    lw ra, (sp)
     sw a0, 20(sp)
     sw a1, 16(sp)
     sw a2, 12(sp)
@@ -973,6 +959,8 @@ move_sprite:
     lw a7, 4(sp)
     lw ra, (sp)
     addi sp, sp, 24
+
+    # find posicao inicio imagem t0 = x t1 = y 
     li t4, 31
     el9:
       addi t2, t2, -1
@@ -1006,7 +994,7 @@ move_sprite:
     sw a4, 4(sp)
     sw a5, (sp)
 
-    la a0, map1
+    mv a0, s3
     li a1, FRAME0
     mv a2, t0
     mv a3, t1
@@ -1018,7 +1006,7 @@ move_sprite:
     li a1, FRAME1
     call erase
 
-    la a1, populated_map1
+    mv a1, s4
     call erase
 
     lw ra, 32(sp)
@@ -1056,18 +1044,7 @@ move_sprite:
     lw ra, 20(sp)
     addi sp, sp, 24
 
-    # print score
-    addi sp, sp, -4
-    sw ra, (sp)
-
-    addi s1, s1, 1
-    call print_score
-
-    lw ra, (sp)
-    addi sp, sp, 4
-
-  eep2:
-
+  ep2:
   ret
 
 
@@ -1138,7 +1115,7 @@ print_score:
   sw a7, 24(sp)
   sw ra, 28(sp)
 
-  la a0, map1
+  mv a0, s3
   li a1, FRAME0
   li a2, 0
   li a3, 16
@@ -1183,7 +1160,7 @@ print_score:
 # a2 -> x
 # a3 -> y
 erase_collision:
-  la t0, collision_map1
+  mv t0, s5
 
   # first pixel t0
   li t1, 320
@@ -1214,8 +1191,52 @@ erase_collision:
 
   ret
 
+# reseta para os mapas originais
+reset_maps:
+  addi sp, sp, -12
+  sw ra, (sp)
+  sw a0, 4(sp)
+  sw a1, 8(sp)
+
+  la a0, map1_orig
+  la a1, map1
+  call reset_map
+
+  la a0, map2_orig
+  la a1, map2
+  call reset_map
+
+  la a0, map3_orig
+  la a1, map3
+  call reset_map
+
+  lw ra, (sp)
+  lw a0, 4(sp)
+  lw a1, 8(sp)
+  addi sp, sp, 12
+  ret
+
+
+# copia mapa original para memoria do mapa usado
+# args:
+# a0 -> mapa para copiar
+# a1 -> mapa para colar
+reset_map:
+  mv t3, a0
+  mv t4, a1
+
+  li t0, 230400 # 320 * 240 * 3
+  li t1, 0
+
+  l11:
+    lw t2, (t3)
+    sw t2, (t4)
+    addi t3, t3, 4
+    addi t4, t4, 4
+    addi t1, t1, 4
+    blt t1, t0, l11
+
+  ret
+
 .include "effects.asm"
-.include "songs.asm"
-.include "menu.asm"
-.include "SYSTEMv24.s"
 

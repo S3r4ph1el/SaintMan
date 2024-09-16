@@ -16,9 +16,9 @@ COIN:   li a2, 104
         ret
 
 SLASH: j SLASHSETUP
-          LOOP: blt s10, s9, SLASHPLAY
-          beq s10, s9, RETURN
-          j LOOP
+          LOOP2: blt s10, s9, SLASHPLAY
+          beq s10, s9, RETURN1
+          j LOOP2
 
 SLASHSETUP:	la s11,SLASHLENGTH			
                 lw s9,0(s11)
@@ -28,8 +28,8 @@ SLASHPLAY:	beq s10, zero, SLASHSTART
                 li a7, 30
                 ecall
                 lw s7, SLASHENDTIME
-                blt a0, s7, RETURN
-SLASHSTART:	beq s10,s9, RETURN		
+                blt a0, s7, RETURN1
+SLASHSTART:	beq s10,s9, RETURN1		
                 li a2, 55               # MUDAR INSTRUMENTO
                 li a3, 127	
                 lw a0,0(s11)		
@@ -45,6 +45,11 @@ SLASHSTART:	beq s10,s9, RETURN
                 addi s10,s10,1
                 ret
 
+GAMEOVER: j GAMEOVERSETUP
+          LOOP1: blt s10, s9, GAMEOVERPLAY
+          beq s10, s9, RETURN1
+          j LOOP1
+
 GAMEOVERSETUP:	la s11,GAMEOVERLENGTH			
                 lw s9,0(s11)
                 la s11,GAMEOVERNOTES
@@ -53,8 +58,8 @@ GAMEOVERPLAY:	beq s10, zero, GAMEOVERSTART
                 li a7, 30
                 ecall
                 lw s7, GAMEOVERENDTIME
-                blt a0, s7, RETURN
-GAMEOVERSTART:	beq s10,s9, RETURN		
+                blt a0, s7, RETURN1
+GAMEOVERSTART:	beq s10,s9, RETURN1		
                 li a2, 1
                 li a3, 100	
                 lw a0,0(s11)		
@@ -70,4 +75,4 @@ GAMEOVERSTART:	beq s10,s9, RETURN
                 addi s10,s10,1
                 ret
                 
-RETURN:	ret
+RETURN1:	ret

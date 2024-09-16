@@ -1,5 +1,4 @@
 .data
-
 .include "../art/main_art/data/MenuScreen.data"
 .include "../art/main_art/data/HistoryScreen_1.data"
 .include "../art/main_art/data/HistoryScreen_2.data"
@@ -13,9 +12,9 @@ MENU:
 		li s6, 1
 		addi sp, sp, -4
 		sw ra, (sp)
-		la a0, MenuScreen
-		li a1, 0
-		li a4, 0
+    la a0, MenuScreen
+    mv a1, s0
+    li a4, 0
 		call render
 	
 		li t1,0xFF200000		
@@ -46,7 +45,7 @@ CONTINUE:
 		
 		lw ra, (sp)
 		addi sp, sp, 4
-		j START
+		ret
 
 # Mostrar história do jogo e espera tecla E para continuar
 # ARGS:
@@ -55,7 +54,7 @@ PRINTHISTORY:
 		
 		addi sp, sp, -4
 		sw ra, (sp)
-		li a1, 0
+    mv a1, s0
 		li a4, 0
 		call render
 		
