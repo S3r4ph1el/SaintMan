@@ -10,11 +10,9 @@
 
 MENU:
 		li s6, 1
-		addi sp, sp, -4
-		sw ra, (sp)
-    la a0, MenuScreen
-    mv a1, s0
-    li a4, 0
+		la a0, MenuScreen
+		mv a1, s0
+		li a4, 0
 		call render
 	
 		li t1,0xFF200000		
@@ -27,6 +25,12 @@ LOOP: 	lw t0,0(t1)
 		beq t2, t3, CONTINUE
 		li t3, '2'
 		beq t2, t3, main_exit
+		li t3, 'x'
+		beq t2, t3, PHASE1
+		li t3, 'y'
+		beq t2, t3, PHASE2
+		li t3, 'z'
+		beq t2, t3, PHASE3
 		j LOOP
 
 		
@@ -42,10 +46,7 @@ CONTINUE:
 		call PRINTHISTORY
 		la a0, HistoryScreen_5
 		call PRINTHISTORY
-		
-		lw ra, (sp)
-		addi sp, sp, 4
-		ret
+		j PHASE1
 
 # Mostrar história do jogo e espera tecla E para continuar
 # ARGS:

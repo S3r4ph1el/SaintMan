@@ -2,6 +2,7 @@
 .include "../art/main_art/data/GameOver.data"
 .include "../sprites/Eucharist.data"
 .include "../sprites/Rosary.data"
+.include "../art/main_art/data/LevelCompleteScreen.data"
 score: .string "score:"
 
 .eqv MMIO 0xff200000
@@ -366,9 +367,15 @@ check_collision:
     beq t0,zero, GAMEOVERLOOP
     lw t2,4(t1)
     li t3, '1'
-    beq t2, t3, START_MAIN
-    li t3, '2'
-    beq t2, t3, main_exit
+		beq t2, t3, START_MAIN
+		li t3, '2'
+		beq t2, t3, main_exit
+		li t3, 'x'
+		beq t2, t3, PHASE1
+		li t3, 'y'
+		beq t2, t3, PHASE2
+		li t3, 'z'
+		beq t2, t3, PHASE3
     j GAMEOVERLOOP
 
 # renders all sprites, players and enemies
@@ -587,7 +594,7 @@ move_sprite:
   # inicializa registradores
   lhu t0, 8(a0) # x
   lhu t1, 10(a0) # y
-  la t2, collision_map1
+  mv t2, s5
   li t3, 320
   mul t3, t3, t1
   add t3, t3, t0
@@ -938,9 +945,11 @@ move_sprite:
 
     addi s1, s1, 1
     call print_score
-
     lw ra, (sp)
     addi sp, sp, 4
+
+    beq s1, s2, LEVEL_COMPLETE
+
     j ep2
 
   if_boost:
@@ -976,7 +985,7 @@ move_sprite:
       j el10
     ee10:
     addi t2, t2, 320
-    la t3, collision_map1
+    mv t3, s5
     sub t5, t2, t3
     li t4, 320
     remu t0, t5, t4
@@ -1047,6 +1056,19 @@ move_sprite:
   ep2:
   ret
 
+LEVEL_COMPLETE:
+  la a0, LevelCompleteScreen # Chama tela de LevelComplete
+  li a4, 0
+  mv a1, s0
+  call render
+  call SETUP6
+  PHASE_LOOP:
+    call PLAY6
+    blt s10, s9, PHASE_LOOP
+  li a7, 32
+  li a0, 2000
+  ecall
+  j game_loop_exit
 
 # handle key press
 # change direction player
