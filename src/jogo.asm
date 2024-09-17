@@ -1,7 +1,7 @@
 .data
 .include "../art/main_art/data/GameOver.data"
-.include "../sprites/Eucharist.data"
-.include "../sprites/Rosary.data"
+.include "../sprites/data/items/Eucharist.data"
+.include "../sprites/data/items/Rosary.data"
 .include "../art/main_art/data/LevelCompleteScreen.data"
 score: .string "score:"
 
