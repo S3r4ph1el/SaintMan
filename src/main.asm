@@ -7,11 +7,18 @@
 .include "../levels/maps_data/map3_original.data"
 .include "../art/main_art/data/FinalScreen.data"
 .include "../sprites/Zenon.data"
+.include "../sprites/Zenon_orig.data"
 .include "../sprites/SaintZenon.data"
 .include "../sprites/Blue.data"
 .include "../sprites/Red.data"
 .include "../sprites/Orange.data"
 .include "../sprites/Purple.data"
+.include "../sprites/Blue_orig.data"
+.include "../sprites/Red_orig.data"
+.include "../sprites/Orange_orig.data"
+.include "../sprites/Purple_orig.data"
+.include "../sprites/Scared.data"
+nivel: .word 1
 
 .include "MACROSv24.s"
 
@@ -23,6 +30,7 @@ START_MAIN:
 PHASE1:
   call SETUP1
   li s6, 1
+  sw s6, nivel, t0
   # inicializa posicoes sprites
   la t0, player
   li t1, 176
@@ -74,6 +82,7 @@ PHASE1:
 PHASE2:
   call SETUP2
   li s6, 2
+  sw s6, nivel, t0
 
   # inicializa posicoes sprites
   la t0, player
@@ -126,6 +135,7 @@ PHASE2:
 PHASE3:
   call SETUP3
   li s6, 3
+  sw s6, nivel, t0
 
   # inicializa posicoes sprites
   la t0, player

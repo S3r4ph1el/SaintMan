@@ -156,6 +156,7 @@ SETUP5:	la s11,LENGTH5				# boost
 	lw s9,0(s11)
 	la s11,NOTES5
 	li s10,0			
+  li s6, 5
 	ret
 PLAY5:	beq s10, zero, START5		# boost
 	li a7, 30
@@ -203,6 +204,34 @@ START6:	beq s10,s9, RETURN		# levelcomplete
 	addi s10,s10,1
 	ret
 
-ENDBOOST: j SETUP
+ENDBOOST: 
+  la t0, boost
+  sw zero, (t0)
+  
+  addi sp, sp, -4
+  sw ra, (sp)
+
+  la a0, player
+  la a1, player_orig
+  call change_sprite
+
+  la a0, blue
+  la a1, blue_orig
+  call change_sprite
+  la a0, orange
+  la a1, orange_orig
+  call change_sprite
+  la a0, red
+  la a1, red_orig
+  call change_sprite
+  la a0, purple
+  la a1, purple_orig
+  call change_sprite
+
+  lw ra, (sp)
+  addi sp, sp, 4
+
+  lw s6, nivel
+  j SETUP
 
 RETURN:	ret

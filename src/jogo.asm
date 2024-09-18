@@ -1107,21 +1107,43 @@ move_sprite:
     la t0, boost
     li t1, 1
     sw t1, (t0)
-    addi sp, sp, -24
+
+    addi sp, sp, -28
+    sw, t2, 24(sp)
     sw a0, 20(sp)
     sw a1, 16(sp)
     sw a2, 12(sp)
     sw a3, 8(sp)
     sw a7, 4(sp)
     sw ra, (sp)
+
+    la a0, player
+    la a1, saint
+    call change_sprite   # change to saint image
+
+    la a0, blue
+    la a1, scared
+    call change_sprite   # change to saint image
+    la a0, red
+    la a1, scared
+    call change_sprite   # change to saint image
+    la a0, orange
+    la a1, scared
+    call change_sprite   # change to saint image
+    la a0, purple
+    la a1, scared
+    call change_sprite   # change to saint image
+    
+
     call SETUP5          # efeito sonoro da pontuação
+    lw, t2, 24(sp)
     lw a0, 20(sp)
     lw a1, 16(sp)
     lw a2, 12(sp)
     lw a3, 8(sp)
     lw a7, 4(sp)
     lw ra, (sp)
-    addi sp, sp, 24
+    addi sp, sp, 28
 
     # find posicao inicio imagem t0 = x t1 = y 
     li t4, 31
@@ -1413,6 +1435,27 @@ reset_map:
     blt t1, t0, l11
 
   ret
+
+# copia imagens sprite para .data de sprite
+# salva na outra imagem, para depois trocar de volta
+# args:
+# a0 -> imagens para substituir, sprite, com posicoes
+# a1 -> imagens para colar
+change_sprite:
+  mv t0, a0
+  mv t1, a1
+  addi t0, t0, 16
+
+  li t2, 1024
+  l15:
+    lw t3, (t1)
+    sw t3, (t0)
+    addi t0, t0, 4
+    addi t1, t1, 4
+    addi t2, t2, -4
+    bgtz t2, l15
+  ret
+
 
 .include "effects.asm"
 
