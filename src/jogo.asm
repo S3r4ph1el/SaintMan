@@ -427,16 +427,21 @@ check_collision:
     sw t1, (t0)
     blez t1, show_game_over 
     
-    addi sp, sp, -20
+    addi sp, sp, -24
     sw ra, (sp)
     sw a0, 4(sp)
     sw a1, 8(sp)
     sw a2, 12(sp)
-    sw a7, 16(sp)
+    sw a3, 16(sp)
+    sw a7, 20(sp)
     
+    call DEATHSETUP
+    DEATHLOOP:
+    call DEATHPLAY
+    blt s10, s9, DEATHLOOP
     li a7, 32
-    li a0, 3000
-    ecall
+    li a0, 1800
+    ecall 
 
     call start_game_map
     
@@ -445,12 +450,28 @@ check_collision:
     lw a0, 4(sp)
     lw a1, 8(sp)
     lw a2, 12(sp)
-    lw a7, 16(sp)
-    addi sp, sp, 20
+    lw a3, 16(sp)
+    lw a7, 20(sp)
+    addi sp, sp, 24
 
     j ep18
 
   slash_enemy:
+    addi sp, sp, -24
+    sw a0, 20(sp)
+    sw a1, 16(sp)
+    sw a2, 12(sp)
+    sw a3, 8(sp)
+    sw a7, 4(sp)
+    sw ra, (sp)
+    call SLASH           # efeito sonoro de matar inimigos
+    lw a0, 20(sp)
+    lw a1, 16(sp)
+    lw a2, 12(sp)
+    lw a3, 8(sp)
+    lw a7, 4(sp)
+    lw ra, (sp)
+    addi sp, sp, 24
     li t0, 4
     sw t0, 4(a0) 
   ep18:
@@ -1012,7 +1033,7 @@ move_sprite:
     sw a3, 8(sp)
     sw a7, 4(sp)
     sw ra, (sp)
-    call COIN             # efeito sonoro da pontuação
+    call COIN            # efeito sonoro da pontuação
     lw a0, 20(sp)
     lw a1, 16(sp)
     lw a2, 12(sp)
