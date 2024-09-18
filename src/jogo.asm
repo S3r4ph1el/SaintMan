@@ -4,7 +4,12 @@
 .include "../sprites/data/items/Rosary.data"
 .include "../art/main_art/data/LevelCompleteScreen.data"
 score: .string "score:"
+fase_str: .string "fase:"
+high_str: .string "high"
+score_str: .string "score:"
 boost: .word 0
+vidas: .word 3
+frame_animacao: .word 0
 
 .eqv MMIO 0xff200000
 .eqv FRAME_SELECTOR 0xff200604
@@ -24,13 +29,7 @@ jogo:
   addi sp, sp, -4
   sw ra, (sp)
 
-  # render map both frames
-  mv a0, s4
-  li a1, 0
-  li a4, 0
-  call render 
-  li a1, 1
-  call render
+  call start_game_map
 
   li s0, 0 # frame variavel global
   li s1, 0 # points variavel global
@@ -38,23 +37,6 @@ jogo:
   # print player and enemies
   call render_all
  
-  # print "score" string
-  li a7, 104
-  la a0, score
-  li a1, 0
-  li a2, 4
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
-  li a7, 104
-  la a0, score
-  li a1, 0
-  li a2, 4
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
-
-  call print_score
   main_loop: 
     # move player
     la a0, player
@@ -120,7 +102,8 @@ change_dir_enemies:
   lw ra, (sp)
   lw a0, 4(sp)
   lw a1, 8(sp)
-  addi sp, sp, 12
+  lw a2, 12(sp)
+  addi sp, sp, 16
   ret
 
 # muda direcao inimigo
@@ -439,6 +422,64 @@ check_collision:
   la t0, boost
   lw t1, (t0)
   bnez t1, slash_enemy
+    la t0, vidas 
+    lw t1, (t0)
+    addi t1, t1, -1
+    sw t1, (t0)
+    blez t1, show_game_over 
+    
+    addi sp, sp, -24
+    sw ra, (sp)
+    sw a0, 4(sp)
+    sw a1, 8(sp)
+    sw a2, 12(sp)
+    sw a3, 16(sp)
+    sw a7, 20(sp)
+    
+    call DEATHSETUP
+    DEATHLOOP:
+    call DEATHPLAY
+    blt s10, s9, DEATHLOOP
+    li a7, 32
+    li a0, 1800
+    ecall 
+
+    call start_game_map
+    
+    call set_phase1
+    lw ra, (sp)
+    lw a0, 4(sp)
+    lw a1, 8(sp)
+    lw a2, 12(sp)
+    lw a3, 16(sp)
+    lw a7, 20(sp)
+    addi sp, sp, 24
+
+    j ep18
+
+  slash_enemy:
+    addi sp, sp, -24
+    sw a0, 20(sp)
+    sw a1, 16(sp)
+    sw a2, 12(sp)
+    sw a3, 8(sp)
+    sw a7, 4(sp)
+    sw ra, (sp)
+    call SLASH           # efeito sonoro de matar inimigos
+    lw a0, 20(sp)
+    lw a1, 16(sp)
+    lw a2, 12(sp)
+    lw a3, 8(sp)
+    lw a7, 4(sp)
+    lw ra, (sp)
+    addi sp, sp, 24
+    li t0, 4
+    sw t0, 4(a0) 
+  ep18:
+    ret
+
+# mostra tela de game over
+show_game_over:
     addi sp, sp, 12 # sai jogo, limpa sp
     la a0, GameOver         # verificar bug da imagem de gameover
     mv a1, s0
@@ -467,10 +508,6 @@ check_collision:
       beq t2, t3, PHASE3
       j GAMEOVERLOOP
 
-  slash_enemy:
-    li t0, 4
-    sw t0, 4(a0) 
-    ret
 
 # renders all sprites, players and enemies
 render_all:
@@ -501,6 +538,15 @@ render_all:
 
   la a0, purple
   call render_sprite
+
+  la t4, frame_animacao
+  lw t3, (t4)
+
+  addi t3, t3, 1
+  li t0, 15
+  remu t3, t3, t0
+  sw t3, (t4)
+
 
   li t0, FRAME_SELECTOR
   sw s0, 0(t0)
@@ -673,11 +719,19 @@ render_sprite:
   lw t1, 4(a0)
   li t2, 4
   bge t1, t2, ep17
-    mul t0, a4, a5
-    addi a0, a0, 16
+    li t2, 3
+    mul t0, t1, t2
+    la t4, frame_animacao
+    lw t3, (t4)
+    li t5, 5
+    divu t3, t3, t5
+    
+    add t0, t0, t3
+    mul t1, a4, a5
     mul t0, t0, t1
+    addi a0, a0, 16
     add a0, a0, t0
-  
+
     call render
 
   ep17:
@@ -997,7 +1051,7 @@ move_sprite:
     sw a3, 8(sp)
     sw a7, 4(sp)
     sw ra, (sp)
-    call COIN             # efeito sonoro da pontuação
+    call COIN            # efeito sonoro da pontuação
     lw a0, 20(sp)
     lw a1, 16(sp)
     lw a2, 12(sp)
@@ -1446,7 +1500,7 @@ change_sprite:
   mv t1, a1
   addi t0, t0, 16
 
-  li t2, 1024
+  li t2, 3072 # 16 * 16 * 3 * 4
   l15:
     lw t3, (t1)
     sw t3, (t0)
@@ -1454,6 +1508,136 @@ change_sprite:
     addi t1, t1, 4
     addi t2, t2, -4
     bgtz t2, l15
+  ret
+
+
+# printa mapa dois frames e HUD
+start_game_map:
+  addi sp, sp, -32
+  sw ra, (sp)
+  sw a0, 4(sp)
+  sw a1, 8(sp)
+  sw a2, 12(sp)
+  sw a3, 16(sp)
+  sw a4, 20(sp)
+  sw a7, 24(sp)
+  sw a5, 28(sp)
+
+  # render map both frames
+  mv a0, s4
+  li a1, 0
+  li a4, 0
+  call render 
+  li a1, 1
+  call render
+
+  # print "score" string
+  li a7, 104
+  la a0, score
+  li a1, 0
+  li a2, 4
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+  li a7, 104
+  la a0, score
+  li a1, 0
+  li a2, 4
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+
+
+  li a7, 104
+  la a0, fase_str
+  li a1, 0
+  li a2, 50
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+  li a7, 104
+  la a0, fase_str
+  li a1, 0
+  li a2, 50
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+
+  li a7, 101
+  lw a0, nivel
+  li a1, 20
+  li a2, 70
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  lw a0, nivel
+  li a1, 20
+  li a2, 70
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+
+  li a7, 104
+  la a0, high_str
+  li a1, 0
+  li a2, 100
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+  li a7, 104
+  la a0, high_str
+  li a1, 0
+  li a2, 100
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+  
+  li a7, 104
+  la a0, score_str
+  li a1, 0
+  li a2, 110
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+  li a7, 104
+  la a0, score_str
+  li a1, 0
+  li a2, 110
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+
+
+  li a7, 101
+  li a0, 355
+  li a1, 10
+  li a2, 125
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  li a0, 355
+  li a1, 10
+  li a2, 125
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+
+  call print_score
+  
+  lw ra, (sp)
+  lw a0, 4(sp)
+  lw a1, 8(sp)
+  lw a2, 12(sp)
+  lw a3, 16(sp)
+  lw a4, 20(sp)
+  lw a7, 24(sp)
+  lw a5, 28(sp)
+  addi sp, sp, 32
+
   ret
 
 

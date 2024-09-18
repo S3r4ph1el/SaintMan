@@ -31,46 +31,12 @@ PHASE1:
   call SETUP1
   li s6, 1
   sw s6, nivel, t0
-  # inicializa posicoes sprites
-  la t0, player
-  li t1, 176
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 96  
-  sh t1, 10(t0)
-  sh t1, 14(t0)
 
-  la t0, blue
-  li t1, 64
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 16
-  sh t1, 10(t0)
-  sh t1, 14(t0)
+  la t0, vidas
+  li t2, 3
+  sw t2, (t0)
 
-  la t0, red
-  li t1, 288
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 16
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, orange
-  li t1, 64
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 208
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, purple
-  li t1, 287
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 208
-  sh t1, 10(t0)
-  sh t1, 14(t0)
+  call set_phase1
 
   # argumentos dos mapas
   li s2, 121 # quantidade de pontos na fase (121)
@@ -84,46 +50,11 @@ PHASE2:
   li s6, 2
   sw s6, nivel, t0
 
-  # inicializa posicoes sprites
-  la t0, player
-  li t1, 176
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 96  
-  sh t1, 10(t0)
-  sh t1, 14(t0)
+  la t0, vidas
+  li t2, 3
+  sw t2, (t0)
 
-  la t0, blue
-  li t1, 64
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 16
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, red
-  li t1, 288
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 16
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, orange
-  li t1, 64
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 208
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, purple
-  li t1, 287
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 208
-  sh t1, 10(t0)
-  sh t1, 14(t0)
+  call set_phase1
 
   # argumentos dos mapas
   li s2, 119 # quantidade de pontos na fase (119)
@@ -137,46 +68,11 @@ PHASE3:
   li s6, 3
   sw s6, nivel, t0
 
-  # inicializa posicoes sprites
-  la t0, player
-  li t1, 176
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 96  
-  sh t1, 10(t0)
-  sh t1, 14(t0)
+  la t0, vidas
+  li t2, 3
+  sw t2, (t0)
 
-  la t0, blue
-  li t1, 64
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 16
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, red
-  li t1, 288
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 16
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, orange
-  li t1, 64
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 208
-  sh t1, 10(t0)
-  sh t1, 14(t0)
-
-  la t0, purple
-  li t1, 287
-  sh t1, 8(t0)
-  sh t1, 12(t0)
-  li t1, 208
-  sh t1, 10(t0)
-  sh t1, 14(t0)
+  call set_phase1
 
   # argumentos dos mapas
   li s2, 115 # quantidade de pontos na fase (115)
@@ -198,6 +94,56 @@ PHASE3:
   main_exit:
   li a7, 10
   ecall
+
+# posiciona sprites para fase 1
+set_phase1:
+  addi sp, sp, -4
+  sw ra, (sp)
+  call SETUP
+  lw ra, (sp)
+  addi sp, sp, 4
+  # inicializa posicoes sprites
+  la t0, player
+  li t1, 176
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 96  
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, blue
+  li t1, 64
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, red
+  li t1, 288
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, orange
+  li t1, 64
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, purple
+  li t1, 287
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  ret
 
 
 .include "jogo.asm"
