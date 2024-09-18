@@ -870,6 +870,32 @@ move_sprite:
     j ep2
 
   a:
+    # testa tunel
+    li t3, 48
+    bne t3, t0, ep19
+    
+      # teleporta jogador
+      li t3, 304
+      sh t3, 8(a0)
+
+      # testa se tem ponto gambiarra
+      bnez a2, ep2
+        mv t2, s5
+        li t3, 320
+        li t1, 116
+        mul t3, t3, t1
+        add t2, t2, t3
+        li t1, 308
+        add t2, t2, t1
+      
+        lbu t3, (t2)
+        li t4, 63 
+        beq t3,t4, if_ponto 
+
+        
+        j ep2
+
+    ep19:
     sub t0, t0, a1
    
     # checa se pode ir para esquerda
@@ -984,6 +1010,32 @@ move_sprite:
       j ep2
 
   d:
+    # testa tunel
+    li t3, 304
+    bne t3, t0, ep20
+    
+      # teleporta jogador
+      li t3, 48
+      sh t3, 8(a0)
+
+      # testa se tem ponto gambiarra
+      bnez a2, ep2
+        mv t2, s5
+        li t3, 320
+        li t1, 116
+        mul t3, t3, t1
+        add t2, t2, t3
+        li t1, 52
+        add t2, t2, t1
+      
+        lbu t3, (t2)
+        li t4, 63 
+        beq t3,t4, if_ponto 
+
+        
+        j ep2
+
+    ep20:
     add t0, t0, a1
 
     # checa se pode ir para direita

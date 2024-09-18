@@ -110,6 +110,8 @@ set_phase1:
   li t1, 96  
   sh t1, 10(t0)
   sh t1, 14(t0)
+  li t1, 0
+  sw t1, 4(t0)
 
   la t0, blue
   li t1, 64
@@ -118,6 +120,8 @@ set_phase1:
   li t1, 16
   sh t1, 10(t0)
   sh t1, 14(t0)
+  li t1, 3
+  sw t1, 4(t0)
 
   la t0, red
   li t1, 288
@@ -126,6 +130,8 @@ set_phase1:
   li t1, 16
   sh t1, 10(t0)
   sh t1, 14(t0)
+  li t1, 1
+  sw t1, 4(t0)
 
   la t0, orange
   li t1, 64
@@ -134,6 +140,8 @@ set_phase1:
   li t1, 208
   sh t1, 10(t0)
   sh t1, 14(t0)
+  li t1, 3
+  sw t1, 4(t0)
 
   la t0, purple
   li t1, 287
@@ -142,6 +150,8 @@ set_phase1:
   li t1, 208
   sh t1, 10(t0)
   sh t1, 14(t0)
+  li t1, 1
+  sw t1, 4(t0)
 
   ret
 
