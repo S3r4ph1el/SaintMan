@@ -7,7 +7,11 @@
 .include "../levels/maps_data/map3_original.data"
 .include "../art/main_art/data/FinalScreen.data"
 .include "../sprites/Zenon.data"
+.include "../sprites/SaintZenon.data"
 .include "../sprites/Blue.data"
+.include "../sprites/Red.data"
+.include "../sprites/Orange.data"
+.include "../sprites/Purple.data"
 
 .include "MACROSv24.s"
 
@@ -33,6 +37,30 @@ PHASE1:
   sh t1, 8(t0)
   sh t1, 12(t0)
   li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, red
+  li t1, 288
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, orange
+  li t1, 64
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, purple
+  li t1, 287
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
   sh t1, 10(t0)
   sh t1, 14(t0)
 
@@ -64,6 +92,30 @@ PHASE2:
   sh t1, 10(t0)
   sh t1, 14(t0)
 
+  la t0, red
+  li t1, 288
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, orange
+  li t1, 64
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, purple
+  li t1, 287
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
   # argumentos dos mapas
   li s2, 119 # quantidade de pontos na fase (119)
   la s3, map2
@@ -89,6 +141,30 @@ PHASE3:
   sh t1, 8(t0)
   sh t1, 12(t0)
   li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, red
+  li t1, 288
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 16
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, orange
+  li t1, 64
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
+  sh t1, 10(t0)
+  sh t1, 14(t0)
+
+  la t0, purple
+  li t1, 287
+  sh t1, 8(t0)
+  sh t1, 12(t0)
+  li t1, 208
   sh t1, 10(t0)
   sh t1, 14(t0)
 

@@ -4,6 +4,7 @@
 .include "../sprites/data/items/Rosary.data"
 .include "../art/main_art/data/LevelCompleteScreen.data"
 score: .string "score:"
+boost: .word 0
 
 .eqv MMIO 0xff200000
 .eqv FRAME_SELECTOR 0xff200604
@@ -71,12 +72,11 @@ jogo:
 
     # sleep
     li a7, 32
-    li a0, 40
+    li a0, 20
     ecall
 
     # change enemies directions
-    la a0, blue
-    call change_dir_enemy
+    call change_dir_enemies
 
     # check if key pressed and handle it
     call change_dir
@@ -90,10 +90,50 @@ jogo:
   addi sp, sp, 4
   ret
 
+
+# change directions of all enemies
+change_dir_enemies:
+  addi sp, sp, -16
+  sw ra, (sp)
+  sw a0, 4(sp)
+  sw a1, 8(sp)
+  sw a2, 12(sp)
+
+  la a0, blue
+  li a1, 0
+  li a2, 0
+  call change_dir_enemy
+
+  la a0, red
+  li a1, 30
+  call change_dir_enemy
+
+  la a0, orange
+  li a1, -30
+  call change_dir_enemy
+
+  la a0, purple
+  li a1, 0
+  li a2, 20
+  call change_dir_enemy
+
+  lw ra, (sp)
+  lw a0, 4(sp)
+  lw a1, 8(sp)
+  addi sp, sp, 12
+  ret
+
 # muda direcao inimigo
 # args:
 # a0 -> inimigo
+# a1 -> offset x do player
+# a2 -> offset y do player
 change_dir_enemy:
+  lw t0, 4(a0)
+  li t1, 4
+  blt t0, t1, ep15
+    ret
+  ep15:
   # inicializa registradores
   mv t2, s5
   lhu t0, 8(a0) # x
@@ -107,9 +147,12 @@ change_dir_enemy:
   addi sp, sp, -12
   sw t5, 4(sp)
   sw t2, 8(sp)
-  
+
   # checa se pode ir para cima
   addi t1, t1, -1
+  lw t6, 4(a0)
+  li t5, 2
+  beq t6, t5 ep7
   bltz t1, ep7
 
   # checa se eh parede
@@ -123,11 +166,13 @@ change_dir_enemy:
   addi t2, t2, -5 # meio personagem
   lbu t3, (t2) 
   beqz t3, ep7
-  
+
   # calcula distancia
   la t3, player
   lhu t4, 8(t3)
+  add t4, t4, a1
   lhu t3, 10(t3)
+  add t3, t3, a2
   sub t4, t4, t0
   sub t3, t3, t1
   mul t4, t4, t4
@@ -144,6 +189,9 @@ change_dir_enemy:
   addi t0, t0, -1
 
   # checa se fora do mapa
+  lw t6, 4(a0)
+  li t5, 3
+  beq t6, t5 ep8
   li t6, 46
   ble t0, t6, ep8
 
@@ -167,7 +215,9 @@ change_dir_enemy:
   # calcula discancia
   la t3, player
   lhu t4, 8(t3)
+  add t4, t4, a1
   lhu t3, 10(t3)
+  add t3, t3, a2
   sub t4, t4, t0
   sub t3, t3, t1
   mul t4, t4, t4
@@ -187,6 +237,9 @@ change_dir_enemy:
   # checa se pode ir para baixo
   addi t1, t1, 1
   addi t0, t0, 1
+  lw t6, 4(a0)
+  li t5, 0
+  beq t6, t5 ep9
 
   # checa se eh fora do mapa
   li t5 224 # 240 - 16
@@ -208,12 +261,14 @@ change_dir_enemy:
   addi t2, t2, -5 # meio personagem
   lbu t3, (t2) 
   beqz t3, ep9
-  
+
 
   # calcula discancia
   la t3, player
   lhu t4, 8(t3)
+  add t4, t4, a1
   lhu t3, 10(t3)
+  add t3, t3, a2
   sub t4, t4, t0
   sub t3, t3, t1
   mul t4, t4, t4
@@ -232,6 +287,9 @@ change_dir_enemy:
   # checa se pode ir para direita
   addi t1, t1, -1
   addi t0, t0, 1
+  lw t6, 4(a0)
+  li t5, 1
+  beq t6, t5 ep10
 
   # checa se eh fora do mapa
   li t5 306 # 320 - 14
@@ -258,7 +316,9 @@ change_dir_enemy:
   # calcula discancia
   la t3, player
   lhu t4, 8(t3)
+  add t4, t4, a1
   lhu t3, 10(t3)
+  add t3, t3, a2
   sub t4, t4, t0
   sub t3, t3, t1
   mul t4, t4, t4
@@ -273,7 +333,7 @@ change_dir_enemy:
       li t5, 3
       sw t5, 4(sp)
   ep10:
-  
+
   lw t5 4(sp) 
   addi sp, sp, 12
   bltz t5, ep11
@@ -296,11 +356,22 @@ move_enemies:
   li a2, 1
   call move_sprite
 
+  la a0, red
+  call move_sprite
+
+  la a0, orange
+  call move_sprite
+
+  la a0, purple
+  call move_sprite
+  
+
   lw ra, (sp)
   lw a0, 4(sp)
   lw a1, 8(sp)
   lw a2, 12(sp)
   addi sp, sp, 16
+  ret
 
 # check collision with all enemies
 check_collisions:
@@ -309,6 +380,15 @@ check_collisions:
   sw a0, 4(sp)
 
   la a0, blue
+  call check_collision
+
+  la a0, red
+  call check_collision
+
+  la a0, orange
+  call check_collision
+
+  la a0, purple
   call check_collision
 
   lw ra, (sp)
@@ -322,6 +402,12 @@ check_collisions:
 # args:
 # a0 -> enemy to check collision with
 check_collision:
+  lw t0, 4(a0)
+  li t1, 4
+  blt t0, t1, ep16
+    ret
+  ep16:
+
   la t0, player
   mv t1, a0
 
@@ -350,33 +436,41 @@ check_collision:
     ret
   ep6:
   
-  addi sp, sp, 12 # sai jogo, limpa sp
-  la a0, GameOver         # verificar bug da imagem de gameover
-  mv a1, s0
-  li a4, 0
-  call render
+  la t0, boost
+  lw t1, (t0)
+  bnez t1, slash_enemy
+    addi sp, sp, 12 # sai jogo, limpa sp
+    la a0, GameOver         # verificar bug da imagem de gameover
+    mv a1, s0
+    li a4, 0
+    call render
 
-  call reset_maps
+    call reset_maps
 
-  li t1, MMIO
-  call GAMEOVERSETUP
-  GAMEOVERLOOP:
-    lw t0,0(t1)
-    andi t0,t0,0x0001
-    call GAMEOVERPLAY
-    beq t0,zero, GAMEOVERLOOP
-    lw t2,4(t1)
-    li t3, '1'
-		beq t2, t3, START_MAIN
-		li t3, '2'
-		beq t2, t3, main_exit
-		li t3, 'x'
-		beq t2, t3, PHASE1
-		li t3, 'y'
-		beq t2, t3, PHASE2
-		li t3, 'z'
-		beq t2, t3, PHASE3
-    j GAMEOVERLOOP
+    li t1, MMIO
+    call GAMEOVERSETUP
+    GAMEOVERLOOP:
+      lw t0,0(t1)
+      andi t0,t0,0x0001
+      call GAMEOVERPLAY
+      beq t0,zero, GAMEOVERLOOP
+      lw t2,4(t1)
+      li t3, '1'
+      beq t2, t3, START_MAIN
+      li t3, '2'
+      beq t2, t3, main_exit
+      li t3, 'x'
+      beq t2, t3, PHASE1
+      li t3, 'y'
+      beq t2, t3, PHASE2
+      li t3, 'z'
+      beq t2, t3, PHASE3
+      j GAMEOVERLOOP
+
+  slash_enemy:
+    li t0, 4
+    sw t0, 4(a0) 
+    ret
 
 # renders all sprites, players and enemies
 render_all:
@@ -397,7 +491,15 @@ render_all:
   call render_sprite
 
   la a0, blue
-  mv a1, s0
+  call render_sprite
+
+  la a0, red
+  call render_sprite
+
+  la a0, orange
+  call render_sprite
+
+  la a0, purple
   call render_sprite
 
   li t0, FRAME_SELECTOR
@@ -433,6 +535,51 @@ render_all:
   mv a5, t4
   call erase
 
+  la t0, red
+  lhu t3, (t0)
+  lhu t4, 2(t0)
+  mv a0, s4
+  mv a1, s0
+  xori a1, a1, 1
+  slli a1, a1, 20
+  li t1, FRAME0
+  add a1, a1, t1
+  lhu a2, 12(t0)
+  lhu a3, 14(t0)
+  mv a4, t3
+  mv a5, t4
+  call erase
+
+  la t0, orange
+  lhu t3, (t0)
+  lhu t4, 2(t0)
+  mv a0, s4
+  mv a1, s0
+  xori a1, a1, 1
+  slli a1, a1, 20
+  li t1, FRAME0
+  add a1, a1, t1
+  lhu a2, 12(t0)
+  lhu a3, 14(t0)
+  mv a4, t3
+  mv a5, t4
+  call erase
+
+  la t0, purple
+  lhu t3, (t0)
+  lhu t4, 2(t0)
+  mv a0, s4
+  mv a1, s0
+  xori a1, a1, 1
+  slli a1, a1, 20
+  li t1, FRAME0
+  add a1, a1, t1
+  lhu a2, 12(t0)
+  lhu a3, 14(t0)
+  mv a4, t3
+  mv a5, t4
+
+  call erase
   lw ra, (sp)
   lw a0, 4(sp)
   lw a1, 8(sp)
@@ -524,13 +671,16 @@ render_sprite:
   
   # seleciona imagem certa
   lw t1, 4(a0)
-  mul t0, a4, a5
-  addi a0, a0, 16
-  mul t0, t0, t1
-  add a0, a0, t0
+  li t2, 4
+  bge t1, t2, ep17
+    mul t0, a4, a5
+    addi a0, a0, 16
+    mul t0, t0, t1
+    add a0, a0, t0
   
-  call render
+    call render
 
+  ep17:
   lw a0, 24(sp)
   lw a1, 20(sp)
   lw a2, 16(sp)
@@ -614,6 +764,7 @@ move_sprite:
   beq t3, t4, s
   li t4, 3
   beq t3, t4, d
+  ret
 
   w:    
     sub t1, t1, a1
@@ -953,6 +1104,9 @@ move_sprite:
     j ep2
 
   if_boost:
+    la t0, boost
+    li t1, 1
+    sw t1, (t0)
     addi sp, sp, -24
     sw a0, 20(sp)
     sw a1, 16(sp)
@@ -1220,16 +1374,16 @@ reset_maps:
   sw a0, 4(sp)
   sw a1, 8(sp)
 
-  la a0, map1_orig
-  la a1, map1
+  la a0, populated_map1_orig
+  la a1, populated_map1
   call reset_map
 
-  la a0, map2_orig
-  la a1, map2
+  la a0, populated_map2_orig
+  la a1, populated_map2
   call reset_map
 
-  la a0, map3_orig
-  la a1, map3
+  la a0, populated_map3_orig
+  la a1, populated_map3
   call reset_map
 
   lw ra, (sp)
@@ -1247,7 +1401,7 @@ reset_map:
   mv t3, a0
   mv t4, a1
 
-  li t0, 230400 # 320 * 240 * 3
+  li t0, 153600 # 320 * 240 * 2
   li t1, 0
 
   l11:
