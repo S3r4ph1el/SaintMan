@@ -26,7 +26,7 @@ nivel: .word 1
   li s0, 0
 START_MAIN:
   call SETUP4
-  # call MENU
+  call MENU
 PHASE1:
   call SETUP1
   li s6, 1

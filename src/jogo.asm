@@ -9,6 +9,7 @@ high_str: .string "high"
 score_str: .string "score:"
 boost: .word 0
 vidas: .word 3
+frame_animacao: .word 0
 
 .eqv MMIO 0xff200000
 .eqv FRAME_SELECTOR 0xff200604
@@ -538,6 +539,15 @@ render_all:
   la a0, purple
   call render_sprite
 
+  la t4, frame_animacao
+  lw t3, (t4)
+
+  addi t3, t3, 1
+  li t0, 15
+  remu t3, t3, t0
+  sw t3, (t4)
+
+
   li t0, FRAME_SELECTOR
   sw s0, 0(t0)
   
@@ -709,11 +719,19 @@ render_sprite:
   lw t1, 4(a0)
   li t2, 4
   bge t1, t2, ep17
-    mul t0, a4, a5
-    addi a0, a0, 16
+    li t2, 3
+    mul t0, t1, t2
+    la t4, frame_animacao
+    lw t3, (t4)
+    li t5, 5
+    divu t3, t3, t5
+    
+    add t0, t0, t3
+    mul t1, a4, a5
     mul t0, t0, t1
+    addi a0, a0, 16
     add a0, a0, t0
-  
+
     call render
 
   ep17:
@@ -1482,7 +1500,7 @@ change_sprite:
   mv t1, a1
   addi t0, t0, 16
 
-  li t2, 1024
+  li t2, 3072 # 16 * 16 * 3 * 4
   l15:
     lw t3, (t1)
     sw t3, (t0)
