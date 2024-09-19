@@ -17,6 +17,7 @@
 boost: .word 0
 vidas: .word 3
 frame_animacao: .word 0
+pontos: .word 0
 
 .eqv MMIO 0xff200000
 .eqv FRAME_SELECTOR 0xff200604
@@ -37,7 +38,8 @@ jogo:
   sw ra, (sp)
 
   li s0, 0 # frame variavel global
-  li s1, 0 # points variavel global
+  la t0, pontos
+  sw zero, (t0)
 
   call start_game_map
 
@@ -532,8 +534,6 @@ check_collision:
     addi t1, t1, -1
     sw t1, (t0)
 
-    # call UPDATE_HIGHSCORE
-
     blez t1, show_game_over 
     
     addi sp, sp, -24
@@ -577,6 +577,12 @@ check_collision:
     sw a7, 4(sp)
     sw ra, (sp)
     call SLASH           # efeito sonoro de matar inimigos
+    
+  
+    # aumenta score
+    addi s1, s1, 10
+    call print_score
+    call UPDATE_HIGHSCORE
 
     # erase player  
     mv a0, s4
@@ -672,6 +678,9 @@ check_collision:
 # mostra tela de game over
 show_game_over:
     addi sp, sp, 12 # sai jogo, limpa sp
+    
+    # reseta pontuacao
+    li s1, 0
     
     mv a0, s4
     mv a1, s0
@@ -1404,15 +1413,29 @@ move_sprite:
     addi sp, sp, 24
 
     # print score
-    addi sp, sp, -4
+    addi sp, sp, -20
     sw ra, (sp)
+    sw a7, 4(sp)
+    sw a0, 8(sp)
+    sw a1, 12(sp)
+    sw a2, 16(sp)
 
     addi s1, s1, 1
+    
     call print_score
+    call UPDATE_HIGHSCORE
     lw ra, (sp)
-    addi sp, sp, 4
+    lw a7, 4(sp)
+    lw a0, 8(sp)
+    lw a1, 12(sp)
+    lw a2, 16(sp)
+    addi sp, sp, 20
 
-    beq s1, s2, LEVEL_COMPLETE
+    la t0, pontos
+    lw t1, (t0)
+    addi t1, t1, 1
+    sw t1, (t0)
+    beq t1, s2, LEVEL_COMPLETE
 
     j ep2
 
@@ -1546,11 +1569,17 @@ move_sprite:
   ret
 
 LEVEL_COMPLETE:
-  # call UPDATE_HIGHSCORE
   la a0, LevelCompleteScreen # Chama tela de LevelComplete
   li a4, 0
   mv a1, s0
   call render
+  
+  la t0, vidas
+  lw t1, (t0)
+  li t2, 20
+  mul t1, t2, t1
+  add s1, s1, t1
+
   call SETUP6
   PHASE_LOOP:
     call PLAY6
@@ -1589,6 +1618,22 @@ change_dir:
   li t2, 'd'
   beq t1, t2, d_
   li t2, 'l'
+  beq t1, t2, d_
+  li t2, 'W'
+  beq t1, t2, w_
+  li t2, 'K'
+  beq t1, t2, w_
+  li t2, 'A'
+  beq t1, t2, a_
+  li t2, 'H'
+  beq t1, t2, a_
+  li t2, 'S'
+  beq t1, t2, s_
+  li t2, 'J'
+  beq t1, t2, s_
+  li t2, 'D'
+  beq t1, t2, d_
+  li t2, 'L'
   beq t1, t2, d_
   j ep1
 
@@ -1812,6 +1857,107 @@ change_sprite:
   ret
 
 
+# printa high_score no hud
+print_high_score:
+  addi sp, sp, -32
+  sw a0, (sp)
+  sw a1, 4(sp)
+  sw a2, 8(sp)
+  sw a3, 12(sp)
+  sw a4, 16(sp)
+  sw a5, 20(sp)
+  sw a7, 24(sp)
+  sw ra, 28(sp)
+
+  
+  mv a0, s3
+  li a1, FRAME0
+  li a2, 0
+  li a3, 105
+  li a4, 47
+  li a5, 16
+  call erase
+  li a1, FRAME1
+  call erase
+
+  li t4, 100
+  lw t0, HIGHSCORE
+  bge t0, t4, maior_100_
+  li t4, 10
+  bge t0, t4, maior_10_
+
+  li a7, 101
+  la t0, HIGHSCORE
+  lw a0, 0(t0)
+  li a1, 20
+  li a2, 107
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  la t0, HIGHSCORE
+  lw a0, 0(t0)
+  li a1, 20
+  li a2, 107
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+  j ep30
+
+  maior_10_:
+  li a7, 101
+  la t0, HIGHSCORE
+  lw a0, 0(t0)
+  li a1, 16
+  li a2, 107
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  la t0, HIGHSCORE
+  lw a0, 0(t0)
+  li a1, 16
+  li a2, 107
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+  j ep30
+  
+  maior_100_:
+  li a7, 101
+  la t0, HIGHSCORE
+  lw a0, 0(t0)
+  li a1, 12
+  li a2, 107
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  la t0, HIGHSCORE
+  lw a0, 0(t0)
+  li a1, 12
+  li a2, 107
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+  
+  ep30:
+  lw a0, (sp)
+  lw a1, 4(sp)
+  lw a2, 8(sp)
+  lw a3, 12(sp)
+  lw a4, 16(sp)
+  lw a5, 20(sp)
+  lw a7, 24(sp)
+  lw ra, 28(sp)
+  addi sp, sp, 32
+
+  ret
+
+
 # printa mapa dois frames e HUD
 start_game_map:
   addi sp, sp, -32
@@ -1832,28 +1978,9 @@ start_game_map:
   li a1, 1
   call render
 
-  li a7, 101
-  # la t0, HIGHSCORE
-  # lw a0, 0(t0)
-  li a0, 355
-  li a1, 12
-  li a2, 107
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
- 
-  li a7, 101
-  # la t0, HIGHSCORE
-  # lw a0, 0(t0)
-  li a0, 355
-  li a1, 12
-  li a2, 107
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
+  call UPDATE_HIGHSCORE
 
   call print_score
-
 
   lw t0, vidas
   li t1, 1

@@ -229,14 +229,13 @@ ENDBOOST:
   call change_sprite
 
 
-  li t5, 176
-  li t6, 96
-
   la t0, blue
   lw t1, 4(t0)
   li t2, 4
   bne t1, t2, ep25
     sw zero, 4(t0)
+    li t5, 64
+    li t6, 16
     sh t5, 8(t0)
     sh t6, 10(t0)
 
@@ -246,6 +245,8 @@ ENDBOOST:
   li t2, 4
   bne t1, t2, ep26
     sw zero, 4(t0)
+    li t5, 64
+    li t6, 208
     sh t5, 8(t0)
     sh t6, 10(t0)
 
@@ -254,6 +255,8 @@ ENDBOOST:
   lw t1, 4(t0)
   li t2, 4
   bne t1, t2, ep27
+    li t5, 288
+    li t6, 16
     sw zero, 4(t0)
     sh t5, 8(t0)
     sh t6, 10(t0)
@@ -264,6 +267,8 @@ ENDBOOST:
   li t2, 4
   bne t1, t2, ep28
     sw zero, 4(t0)
+    li t5, 287
+    li t6, 208
     sh t5, 8(t0)
     sh t6, 10(t0)
 

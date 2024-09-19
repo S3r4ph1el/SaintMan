@@ -30,13 +30,14 @@
 .include "../sprites/Purple_orig.data"
 .include "../sprites/Scared.data"
 nivel: .word 1
-# aSCORE: .word 0
+HIGHSCORE: .word 0
 
 .include "MACROSv24.s"
 
 .text
-  # call OPEN_FILE
+  li s1, 0
   li s0, 0
+  call READ_RANKING_FILE
 START_MAIN:
   call SETUP4
   call MENU
@@ -175,7 +176,7 @@ set_phase1:
 
   ret
 
-# .include "file.asm"
+.include "file.asm"
 .include "jogo.asm"
 .include "menu.asm"
 .include "songs.asm"

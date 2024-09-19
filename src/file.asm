@@ -1,48 +1,75 @@
 .data
 
-FILE: .asciz "ranking.bin"
-
-FP: .word 0
+FILE: .asciz "src/ranking.bin"
 
 .text
 
-OPEN_FILE:
+READ_RANKING_FILE:
 
     li a7, 1024
     la a0, FILE
     li a1, 0
     ecall
 
-    sw a0, FP, t0 
+    bgez a0, ep29
+    
+    li a7, 1024
+    la a0, FILE
+    li a1, 1
+    ecall
+    ret
+
+    ep29:
 
     li a7, 63
-    mv a0, t0
+    # fp em a0
+    addi sp, sp, -4
+    sw a0, (sp)
     la a1, HIGHSCORE
     li a2, 4
     ecall
 
-CLOSE_FILE:
-
     li a7, 57
-    mv a0, t0
+    lw a0, (sp)
+    addi sp, sp, 4
     ecall
 
     ret
     
 UPDATE_HIGHSCORE:
-
-    la a0, HIGHSCORE
-    lw a1, 0(a0)
     
-    blt s1, a1, NO_UPDATE
+    la t0, HIGHSCORE
+    lw t1, 0(t0)
+    
+    blt s1, t1, NO_UPDATE
 
-    call OPEN_FILE
+    sw s1, 0(t0)
+
+    li a7, 1024
+    la a0, FILE
+    li a1, 1
+    ecall
+  
 
     li a7, 64
-    mv a0, t0
-    mv a1, s1
+    # fp already in a0
+    addi sp, sp, -4
+    sw a0, (sp)
+    la a1, HIGHSCORE
     li a2, 4
     ecall
+
+    li a7, 57
+    lw a0, (sp)
+    addi sp, sp, 4
+    ecall
+
+    addi sp, sp, -4
+    sw ra, (sp)
+    call print_high_score
+    lw ra, (sp)
+    addi sp, sp, 4
+
 
 NO_UPDATE:
     ret
