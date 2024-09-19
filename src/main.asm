@@ -19,7 +19,7 @@
 .include "../sprites/Purple_orig.data"
 .include "../sprites/Scared.data"
 nivel: .word 1
-HIGHSCORE: .word 0
+# aSCORE: .word 0
 
 .include "MACROSv24.s"
 

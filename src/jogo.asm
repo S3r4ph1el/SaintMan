@@ -532,6 +532,8 @@ check_collision:
     addi t1, t1, -1
     sw t1, (t0)
 
+    # call UPDATE_HIGHSCORE
+
     blez t1, show_game_over 
     
     addi sp, sp, -24
@@ -669,7 +671,6 @@ check_collision:
 
 # mostra tela de game over
 show_game_over:
-    # call UPDATE_HIGHSCORE
     addi sp, sp, 12 # sai jogo, limpa sp
     
     mv a0, s4
@@ -1830,6 +1831,8 @@ start_game_map:
   call render
 
   li a7, 101
+  # la t0, HIGHSCORE
+  # lw a0, 0(t0)
   li a0, 355
   li a1, 12
   li a2, 107
@@ -1838,6 +1841,8 @@ start_game_map:
   ecall
  
   li a7, 101
+  # la t0, HIGHSCORE
+  # lw a0, 0(t0)
   li a0, 355
   li a1, 12
   li a2, 107

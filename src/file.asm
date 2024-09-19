@@ -21,8 +21,6 @@ OPEN_FILE:
     li a2, 4
     ecall
 
-    ret
-
 CLOSE_FILE:
 
     li a7, 57
