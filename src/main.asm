@@ -87,8 +87,12 @@ PHASE3:
   mv a1, s0
   call render
 
+  call ENDGAMESETUP
+  LOOP_ENDGAME:
+  call ENDGAMEPLAY
+  blt s10, s9, LOOP_ENDGAME
   li a7, 32
-  li a0, 10000
+  li a0, 8000
   ecall
 
   main_exit:

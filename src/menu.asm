@@ -30,6 +30,8 @@ LOOP: 	lw t0,0(t1)
 		beq t2, t3, PHASE2
 		li t3, 'z'
 		beq t2, t3, PHASE3
+		li t3, 'e'
+		beq t2, t3, ENDGAME
 		j LOOP
 
 		
