@@ -228,6 +228,46 @@ ENDBOOST:
   la a1, purple_orig
   call change_sprite
 
+
+  li t5, 176
+  li t6, 96
+
+  la t0, blue
+  lw t1, 4(t0)
+  li t2, 4
+  bne t1, t2, ep25
+    sw zero, 4(t0)
+    sh t5, 8(t0)
+    sh t6, 10(t0)
+
+  ep25:
+  la t0, orange
+  lw t1, 4(t0)
+  li t2, 4
+  bne t1, t2, ep26
+    sw zero, 4(t0)
+    sh t5, 8(t0)
+    sh t6, 10(t0)
+
+  ep26:
+  la t0, red
+  lw t1, 4(t0)
+  li t2, 4
+  bne t1, t2, ep27
+    sw zero, 4(t0)
+    sh t5, 8(t0)
+    sh t6, 10(t0)
+
+  ep27:
+  la t0, purple
+  lw t1, 4(t0)
+  li t2, 4
+  bne t1, t2, ep28
+    sw zero, 4(t0)
+    sh t5, 8(t0)
+    sh t6, 10(t0)
+
+  ep28: 
   lw ra, (sp)
   addi sp, sp, 4
 
