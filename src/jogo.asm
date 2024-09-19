@@ -3,6 +3,17 @@
 .include "../sprites/data/items/Eucharist.data"
 .include "../sprites/data/items/Rosary.data"
 .include "../art/main_art/data/LevelCompleteScreen.data"
+.include "../sprites/data/items/Lives_1.data"
+.include "../sprites/data/items/Lives_2.data"
+.include "../sprites/data/items/Lives_3.data"
+.include "../sprites/data/zenon/ZenonDead1.data"
+.include "../sprites/data/zenon/ZenonDead2.data"
+.include "../sprites/data/zenon/ZenonDead3.data"
+.include "../sprites/data/saintzenon/SlashUp.data"
+.include "../sprites/data/saintzenon/SlashDown.data"
+.include "../sprites/data/saintzenon/SlashRight.data"
+.include "../sprites/data/saintzenon/SlashLeft.data"
+
 boost: .word 0
 vidas: .word 3
 frame_animacao: .word 0
@@ -25,10 +36,10 @@ jogo:
   addi sp, sp, -4
   sw ra, (sp)
 
-  call start_game_map
-
   li s0, 0 # frame variavel global
   li s1, 0 # points variavel global
+
+  call start_game_map
 
   # print player and enemies
   call render_all
@@ -316,6 +327,13 @@ change_dir_enemy:
   lw t5 4(sp) 
   addi sp, sp, 12
   bltz t5, ep11
+    la t0, boost
+    lw t0, (t0)
+    beqz t0, ep21
+      addi t5, t5, 2
+      li t4, 4
+      remu t5, t5, t4
+    ep21:
     sw t5, 4(a0)
   ep11:
 
@@ -415,13 +433,105 @@ check_collision:
     ret
   ep6:
   
+  # checa se player em boost 
   la t0, boost
   lw t1, (t0)
   bnez t1, slash_enemy
+    
+    addi sp, sp, -32
+    sw ra, (sp)
+    sw a0, 4(sp)
+    sw a1, 8(sp)
+    sw a2, 12(sp)
+    sw a3, 16(sp)
+    sw a4, 20(sp)
+    sw a5, 24(sp)
+    sw a7, 28(sp)
+    # anima morte player
+    mv a0, s4
+    
+    mv a1, s0
+    slli a1, a1, 20
+    li t1, FRAME0
+    add a1, a1, t1
+    
+    la t0, player
+    lhu a4, (t0)
+    lhu a5, 2(t0)
+    lhu a2, 8(t0)
+    lhu a3, 10(t0)
+    
+    call erase
+
+    la a0, dead1
+    mv a1, s0
+    lw a4, (a0)
+    lw a5, 4(a0)
+    addi a0, a0, 8
+    
+    call render
+    
+    li a7, 32
+    li a0, 80
+    ecall
+
+    mv a0, s4
+    mv a1, s0
+    slli a1, a1, 20
+    li t1, FRAME0
+    add a1, a1, t1
+    li a4, 17
+    li a5, 17 # hardcoded
+    call erase
+
+    la a0, dead2
+    mv a1, s0
+    lw a4, (a0)
+    lw a5, 4(a0)
+    addi a0, a0, 8
+    
+    call render
+
+    li a7, 32
+    li a0, 80
+    ecall
+    
+    mv a0, s4
+    mv a1, s0
+    slli a1, a1, 20
+    li t1, FRAME0
+    add a1, a1, t1
+    li a4, 14
+    li a5, 21 # hardcoded
+    call erase
+
+    la a0, dead3
+    mv a1, s0
+    lw a4, (a0)
+    lw a5, 4(a0)
+    addi a0, a0, 8
+    
+    call render
+
+    li a7, 32
+    li a0, 100
+    ecall
+
+    lw ra, (sp)
+    lw a0, 4(sp)
+    lw a1, 8(sp)
+    lw a2, 12(sp)
+    lw a3, 16(sp)
+    lw a4, 20(sp)
+    lw a5, 24(sp)
+    lw a7, 28(sp)
+    addi sp, sp, 32
+    # diminui vidas
     la t0, vidas 
     lw t1, (t0)
     addi t1, t1, -1
     sw t1, (t0)
+
     blez t1, show_game_over 
     
     addi sp, sp, -24
@@ -453,8 +563,11 @@ check_collision:
 
     j ep18
 
+  # mata inimigo
   slash_enemy:
-    addi sp, sp, -24
+    addi sp, sp, -32
+    sw a5, 28(sp)
+    sw a4, 24(sp)
     sw a0, 20(sp)
     sw a1, 16(sp)
     sw a2, 12(sp)
@@ -462,22 +575,114 @@ check_collision:
     sw a7, 4(sp)
     sw ra, (sp)
     call SLASH           # efeito sonoro de matar inimigos
+
+    # erase player  
+    mv a0, s4
+    
+    mv a1, s0
+    slli a1, a1, 20
+    li t1, FRAME0
+    add a1, a1, t1
+    
+    la t0, player
+    lhu a4, (t0)
+    lhu a5, 2(t0)
+    lhu a2, 8(t0)
+    lhu a3, 10(t0)
+    
+    call erase
+
+    # printa slash
+    mv a1, s0
+    la t0, player
+    lhu a2, 8(t0) # x 
+    lhu a3, 10(t0) # y
+    lhu t3, 4(t0) # direcao
+  
+    li t4, 1
+    beq t3, t4, slash_a
+    li t4, 2
+    beq t3, t4, slash_s
+    li t4, 3
+    beq t3, t4, slash_d
+    
+    slash_w:
+      la a0, slash_up
+      j ep22
+
+    slash_a:
+      la a0, slash_left
+      j ep22
+
+    slash_s:
+      la a0, slash_down
+      j ep22
+
+    slash_d:
+      la a0, slash_right
+
+    ep22:
+
+    lw a4, (a0)
+    lw a5, 4(a0)
+    addi sp, sp, -8
+    sw a4, (sp)
+    sw a5, 4(sp)
+    addi a0, a0, 8
+    call render
+
+    li a7, 32
+    li a0, 300
+    ecall
+
+    # erase slash
+    mv a0, s4
+    mv a1, s0
+    slli a1, a1, 20
+    li t1, FRAME0
+    add a1, a1, t1
+
+    la t0, player
+    lhu a2, 8(t0)
+    lhu a3, 10(t0)
+
+    lw a4, (sp)
+    lw a5, 4(sp)
+    addi sp, sp 8
+    call erase
+
+    lw a5, 28(sp)
+    lw a4, 24(sp)
     lw a0, 20(sp)
     lw a1, 16(sp)
     lw a2, 12(sp)
     lw a3, 8(sp)
     lw a7, 4(sp)
     lw ra, (sp)
-    addi sp, sp, 24
+    addi sp, sp, 32
+
+    # representa inimigo morto
     li t0, 4
     sw t0, 4(a0) 
   ep18:
-    ret
+  ret
 
 # mostra tela de game over
 show_game_over:
     # call UPDATE_HIGHSCORE
     addi sp, sp, 12 # sai jogo, limpa sp
+    
+    mv a0, s4
+    mv a1, s0
+    slli a1, a1, 20
+    li t1, FRAME0
+    add a1, a1, t1
+    li a2, 10
+    li a3, 156
+    li a4, 29 # hardcoded
+    li a5, 8
+    call erase
+
     la a0, GameOver         # verificar bug da imagem de gameover
     mv a1, s0
     li a4, 0
@@ -749,10 +954,10 @@ render_sprite:
 # args:
 # a0 -> imagem para substituir (map)
 # a1 -> endereco onde apagar
-# a2 -> largura
-# a3 -> altura
-# a4 -> x
-# a5 -> y
+# a2 -> x
+# a3 -> y
+# a4 -> largura
+# a5 -> altura
 erase:
   # t0 = primeiro pixel bg
   # t1 = primeiro pixel apagar(bitmap)
@@ -886,7 +1091,7 @@ move_sprite:
         add t2, t2, t3
         li t1, 308
         add t2, t2, t1
-      
+
         lbu t3, (t2)
         li t4, 63 
         beq t3,t4, if_ponto 
@@ -1422,18 +1627,22 @@ print_score:
   mv a0, s3
   li a1, FRAME0
   li a2, 0
-  li a3, 16
+  li a3, 60
   li a4, 47
   li a5, 16
   call erase
   li a1, FRAME1
   call erase
-   
+
+  li t4, 100
+  bge s1, t4, maior_100
+  li t4, 10
+  bge s1, t4, maior_10
 
   li a7, 101
   mv a0, s1
   li a1, 20
-  li a2, 20
+  li a2, 65
   li a3, 0xc7ff
   li a4, 0
   ecall
@@ -1441,11 +1650,48 @@ print_score:
   li a7, 101
   mv a0, s1
   li a1, 20
-  li a2, 20
+  li a2, 65
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+  j ep24
+
+  maior_10:
+  li a7, 101
+  mv a0, s1
+  li a1, 16
+  li a2, 65
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  mv a0, s1
+  li a1, 16
+  li a2, 65
+  li a3, 0xc7ff
+  li a4, 1
+  ecall
+  j ep24
+  
+  maior_100:
+  li a7, 101
+  mv a0, s1
+  li a1, 12
+  li a2, 65
+  li a3, 0xc7ff
+  li a4, 0
+  ecall
+ 
+  li a7, 101
+  mv a0, s1
+  li a1, 12
+  li a2, 65
   li a3, 0xc7ff
   li a4, 1
   ecall
   
+  ep24:
   lw a0, (sp)
   lw a1, 4(sp)
   lw a2, 8(sp)
@@ -1600,7 +1846,39 @@ start_game_map:
   ecall
 
   call print_score
+
+
+  lw t0, vidas
+  li t1, 1
+  beq t0, t1, uma
+  li t1, 2
+  beq t0, t1, duas
+  li t1, 3
+  beq t0, t1, tres
+  j ep23
+
+  uma:
+    la a0, lives_1
+    j ep23
+  duas:
+    la a0, lives_2
+    j ep23
+  tres:
+    la a0, lives_3
   
+  ep23:
+    li a1, 0
+    li a2, 10
+    li a3, 156 
+    
+    lw a4, (a0)
+    lw a5, 4(a0)
+    addi a0, a0, 8
+    
+    call render
+    li a1, 1
+    call render
+
   lw ra, (sp)
   lw a0, 4(sp)
   lw a1, 8(sp)
