@@ -33,7 +33,7 @@ GAMEOVERPLAY:	beq s10, zero, GAMEOVERSTART
                 ecall
                 lw s7, GAMEOVERENDTIME
                 blt a0, s7, RETURN1
-GAMEOVERSTART:	beq s10,s9, RETURN1		
+GAMEOVERSTART:	beq s10,s9, START_MAIN		
                 li a2, 1
                 li a3, 100	
                 lw a0,0(s11)		
