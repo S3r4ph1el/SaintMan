@@ -710,6 +710,8 @@ show_game_over:
       beq t2, t3, PHASE3
       li t3, 'e'
 		  beq t2, t3, ENDGAME
+      li t3, 'l'
+		  beq t2, t3, LEVEL_COMPLETE
       j GAMEOVERLOOP
 
 
