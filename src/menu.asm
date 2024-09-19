@@ -9,7 +9,6 @@
 .text
 
 MENU:
-		li s6, 1
 		la a0, MenuScreen
 		mv a1, s0
 		li a4, 0

@@ -3,10 +3,6 @@
 .include "../sprites/data/items/Eucharist.data"
 .include "../sprites/data/items/Rosary.data"
 .include "../art/main_art/data/LevelCompleteScreen.data"
-score: .string "score:"
-fase_str: .string "fase:"
-high_str: .string "high"
-score_str: .string "score:"
 boost: .word 0
 vidas: .word 3
 frame_animacao: .word 0
@@ -1582,85 +1578,6 @@ start_game_map:
   call render 
   li a1, 1
   call render
-
-  # print "score" string
-  li a7, 104
-  la a0, score
-  li a1, 0
-  li a2, 4
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
-  li a7, 104
-  la a0, score
-  li a1, 0
-  li a2, 4
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
-
-
-  li a7, 104
-  la a0, fase_str
-  li a1, 0
-  li a2, 50
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
-  li a7, 104
-  la a0, fase_str
-  li a1, 0
-  li a2, 50
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
-
-  li a7, 101
-  lw a0, nivel
-  li a1, 20
-  li a2, 70
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
- 
-  li a7, 101
-  lw a0, nivel
-  li a1, 20
-  li a2, 70
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
-
-  li a7, 104
-  la a0, high_str
-  li a1, 0
-  li a2, 100
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
-  li a7, 104
-  la a0, high_str
-  li a1, 0
-  li a2, 100
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
-  
-  li a7, 104
-  la a0, score_str
-  li a1, 0
-  li a2, 110
-  li a3, 0xc7ff
-  li a4, 0
-  ecall
-  li a7, 104
-  la a0, score_str
-  li a1, 0
-  li a2, 110
-  li a3, 0xc7ff
-  li a4, 1
-  ecall
-
 
   li a7, 101
   li a0, 355
