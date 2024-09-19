@@ -476,6 +476,7 @@ check_collision:
 
 # mostra tela de game over
 show_game_over:
+    # call UPDATE_HIGHSCORE
     addi sp, sp, 12 # sai jogo, limpa sp
     la a0, GameOver         # verificar bug da imagem de gameover
     mv a1, s0
@@ -1337,6 +1338,7 @@ move_sprite:
   ret
 
 LEVEL_COMPLETE:
+  # call UPDATE_HIGHSCORE
   la a0, LevelCompleteScreen # Chama tela de LevelComplete
   li a4, 0
   mv a1, s0
@@ -1583,16 +1585,16 @@ start_game_map:
 
   li a7, 101
   li a0, 355
-  li a1, 10
-  li a2, 125
+  li a1, 12
+  li a2, 107
   li a3, 0xc7ff
   li a4, 0
   ecall
  
   li a7, 101
   li a0, 355
-  li a1, 10
-  li a2, 125
+  li a1, 12
+  li a2, 107
   li a3, 0xc7ff
   li a4, 1
   ecall
