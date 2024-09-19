@@ -25,6 +25,6 @@ ISC Assembly Project (Introduction to Computing Systems) at UnB 2024.1
 
 - Collaborators:
   
-  - Enzo Teles
-  - Victor Yan Martinez
-  - Lucas Mendes
+  - Enzo Teles ([@S3r4ph1el](https://github.com/S3r4ph1el))
+  - Victor Yan Martinez ([@vymartinez](https://github.com/vymartinez))
+  - Lucas Mendes ([@LucasMABF](https://github.com/LucasMABF))
