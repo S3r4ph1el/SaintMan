@@ -1,13 +1,3 @@
-# SaintMan
-
-ISC Assembly Project (Introduction to Computing Systems) at UnB 2024.1
-
-- Collaborators:
-  
-  - Enzo Teles
-  - Victor Yan Martinez
-  - Lucas Mendes
-
 ## How to run
 ```
 ./fpgrars-x86_64-pc-windows-gnu.exe src\main.asm
@@ -28,3 +18,13 @@ Cheat codes: (on first menu screen or on gameover screen)
 
 ## Project Article
 See SaintMan_Article.pdf in source
+
+# SaintMan
+
+ISC Assembly Project (Introduction to Computing Systems) at UnB 2024.1
+
+- Collaborators:
+  
+  - Enzo Teles
+  - Victor Yan Martinez
+  - Lucas Mendes
