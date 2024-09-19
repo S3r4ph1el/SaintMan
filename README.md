@@ -14,7 +14,7 @@ ISC Assembly Project (Introduction to Computing Systems) at UnB 2024.1
 ```
 ## How to play
 ```
-[A], [W], [S], [D] or [J], [I], [K], [L] - player move
+[A], [W], [S], [D] - player move
 [1], [2], [E] - menu interactions
 
 Cheat codes: (on first menu screen or on gameover screen)
