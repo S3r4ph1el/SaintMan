@@ -1,3 +1,14 @@
+#########################################################
+#						                                          #
+# Universidade de Brasilia			                      #
+# Departamento de Ciencia da Computacao		       	    #
+# Introducao aos Sistemas Computacionais - 2024.1	    #
+# Professor Marcus Vinicius Lamar			                #
+# Alunos Victor Martinez, Enzo Teles e Lucas Mendes   #
+# Nome do jogo: SaintMan				                      #
+#							                                        #
+#########################################################
+
 .data
 .include "../levels/maps_data/map1.data"
 .include "../levels/maps_data/map2.data"
