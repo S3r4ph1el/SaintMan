@@ -36,10 +36,10 @@ jogo:
   addi sp, sp, -4
   sw ra, (sp)
 
-  call start_game_map
-
   li s0, 0 # frame variavel global
   li s1, 0 # points variavel global
+
+  call start_game_map
 
   # print player and enemies
   call render_all
