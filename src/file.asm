@@ -41,6 +41,12 @@ UPDATE_HIGHSCORE:
     la t0, HIGHSCORE
     lw t1, 0(t0)
     
+    addi sp, sp, -4
+    sw ra, (sp)
+    call print_high_score
+    lw ra, (sp)
+    addi sp, sp, 4
+
     blt s1, t1, NO_UPDATE
 
     sw s1, 0(t0)
@@ -63,12 +69,6 @@ UPDATE_HIGHSCORE:
     lw a0, (sp)
     addi sp, sp, 4
     ecall
-
-    addi sp, sp, -4
-    sw ra, (sp)
-    call print_high_score
-    lw ra, (sp)
-    addi sp, sp, 4
 
 
 NO_UPDATE:
