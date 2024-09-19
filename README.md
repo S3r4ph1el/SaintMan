@@ -17,7 +17,7 @@ Cheat codes: (on first menu screen or on gameover screen)
 ```
 
 ## Project Article
-See SaintMan_Article.pdf in source
+See `SaintMan_Article.pdf` in source
 
 # SaintMan
 
