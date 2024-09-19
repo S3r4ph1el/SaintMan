@@ -41,6 +41,7 @@ START_MAIN:
   call SETUP4
   call MENU
 PHASE1:
+  call ENDBOOST
   call SETUP1
   li s6, 1
   sw s6, nivel, t0
@@ -59,6 +60,7 @@ PHASE1:
   call jogo
 
 PHASE2:
+  call ENDBOOST
   call SETUP2
   li s6, 2
   sw s6, nivel, t0
@@ -77,6 +79,7 @@ PHASE2:
   call jogo
 
 PHASE3:
+  call ENDBOOST
   call SETUP3
   li s6, 3
   sw s6, nivel, t0
