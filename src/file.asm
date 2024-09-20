@@ -17,6 +17,9 @@ READ_RANKING_FILE:
     la a0, FILE
     li a1, 1
     ecall
+
+    li a7, 57
+    ecall
     ret
 
     ep29:
